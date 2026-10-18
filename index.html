@@ -1,86 +1,3074 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mi Español</title><style>
-:root{--bg:#f6f8fb;--card:#fff;--line:#dde4ee;--text:#17212b;--muted:#697586;--blue:#2563eb;--green:#16835a;--red:#b42318;--amber:#9a6700}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}.wrap{max-width:1180px;margin:auto;padding:20px}h1,h2,h3{margin-top:0}.top{display:flex;justify-content:space-between;gap:15px;align-items:center;flex-wrap:wrap}.muted{color:var(--muted)}button,input,select{font:inherit}button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 14px;cursor:pointer}button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}button.active{background:#17212b;color:#fff}.nav,.toolbar,.tabs2{display:flex;gap:8px;flex-wrap:wrap}.nav{margin:18px 0}.panel{display:none}.panel.active{display:block}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 4px 15px rgba(0,0,0,.04)}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat b{display:block;font-size:26px}.list{display:grid;gap:10px}.item{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}.item b{font-size:17px}.auth{max-width:460px;margin:70px auto}.auth input,.trainer input,.toolbar select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;margin:6px 0 12px}.trainer{max-width:760px}.prompt{font-size:28px;font-weight:700;margin:18px 0}.feedback{padding:12px;border-radius:10px;margin-top:12px}.ok{background:#e9f7ef;color:var(--green)}.bad{background:#fdecec;color:var(--red)}.almost{background:#fff3cd;color:var(--amber)}.hintbox{padding:10px 12px;border-radius:10px;margin:8px 0 12px;background:#eef4ff;color:#234a91;border:1px solid #d8e5ff}.examples{margin:12px 0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fafbfe}.examples b{display:block;margin-bottom:7px}.examples p{margin:6px 0;line-height:1.45}.blank{font-weight:700;letter-spacing:2px;color:#536173}.choice{display:block;width:100%;text-align:left;margin:8px 0}.choice.good{border-color:var(--green)}.choice.wrong{border-color:var(--red)}.choice.eliminated{opacity:.38;text-decoration:line-through;pointer-events:none}.topiclink{display:inline-flex;align-items:center;gap:6px;margin:8px 0 8px;padding:7px 10px;border-radius:9px;background:#f3f6fb;border:1px solid var(--line);color:#2457a7;text-decoration:none;font-size:14px}.speak{padding:5px 9px;margin-left:8px;border-radius:999px;font-size:13px}.lesson{margin-bottom:12px}.verbgrid{display:grid;grid-template-columns:repeat(5,minmax(110px,1fr));gap:7px;margin-top:10px}.verbgrid div{background:#f5f7fa;padding:8px;border-radius:8px}.small{font-size:13px}.pill{display:inline-block;padding:3px 8px;border-radius:999px;background:#edf2f7;font-size:12px;margin-left:6px}.flash{outline:3px solid #9fc0ff}.mobile-note{display:none}.actionbar{margin:10px 0}
-@media(max-width:850px){.grid{grid-template-columns:1fr 1fr}.verbgrid{grid-template-columns:1fr 1fr}.wrap{padding:12px}.trainer{padding:14px}.prompt{font-size:25px}.actionbar{position:sticky;bottom:6px;z-index:20;background:rgba(255,255,255,.97);padding:9px;border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.12)}.actionbar button{flex:1;min-height:46px}.mobile-note{display:block;font-size:12px;color:var(--muted);margin-top:-4px;margin-bottom:8px}.trainer input{font-size:20px;min-height:54px}.tabs2{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.tabs2 button{white-space:nowrap}}
-</style></head><body><div class="wrap">
-<div id="authView" class="auth card"><h1>Mi Español</h1><p class="muted">Your personal Spanish learning space</p><input id="email" type="email" placeholder="Email"><input id="password" type="password" placeholder="Password"><div class="toolbar"><button id="signin" class="primary">Sign in</button><button id="signup">Create account</button></div><div id="authMsg" class="small muted"></div></div>
-<div id="appView" style="display:none"><div class="top"><div><h1>Mi Español</h1><div class="muted">Vocabulary, grammar, verbs and practice — all in one place</div></div><button id="signout">Sign out</button></div>
-<div class="nav"><button data-tab="dashboard" class="active">Dashboard</button><button data-tab="practice">Practice</button><button data-tab="vocabulary">Vocabulary</button><button data-tab="verbs">Verbs</button><button data-tab="lessons">Lessons</button><button data-tab="grammar">Grammar</button><button data-tab="mistakes">Mistakes</button><button data-tab="stats">Stats</button></div>
-<section id="dashboard" class="panel active"><div class="grid"><div class="card stat"><span class="muted">Items</span><b id="stTotal">0</b></div><div class="card stat"><span class="muted">Mastered</span><b id="stMastered">0</b></div><div class="card stat"><span class="muted">Mistakes</span><b id="stMistakes">0</b></div><div class="card stat"><span class="muted">Due now</span><b id="stDue">0</b></div></div></section>
-<section id="practice" class="panel"><div class="card trainer"><h2>Practice</h2>
-<div class="tabs2"><button class="mode active" data-mode="typing">Type Spanish</button><button class="mode" data-mode="multiple">Multiple choice</button><button class="mode" data-mode="verbs">Verb conjugation</button><button class="mode" data-mode="grammar">Grammar</button><button class="mode" data-mode="mixed">Mixed</button></div>
-<div class="toolbar"><select id="scope"><option value="due">Due + new</option><option value="mistakes">Mistakes only</option><option value="all">All material</option></select><button id="startPractice" class="primary">Start</button></div>
-<div id="counter" class="small muted"></div><div id="prompt" class="prompt">Choose a test type and press Start</div><div id="subprompt" class="muted"></div><div id="topicLinkWrap"></div><div id="examplesBox" class="examples" style="display:none"></div><div id="hintBox" class="hintbox" style="display:none"></div>
-<div class="actionbar toolbar"><button id="check" class="primary">Check / Next</button><button id="hint">Hint</button><button id="skip">Skip</button><button id="speakAnswer">🔊 Hear Spanish</button></div>
-<div class="mobile-note">On phone: keyboard “Go/Enter” = Check / Next. Correct answers move on automatically.</div>
-<input id="answer" enterkeyhint="go" placeholder="Type your answer…" autocomplete="off" autocapitalize="none" spellcheck="false"><div id="choices"></div><div id="feedback"></div>
-</div></section>
-<section id="vocabulary" class="panel"><div class="card"><h2>Vocabulary & expressions</h2><input id="search" placeholder="Search…" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;margin-bottom:12px"><div id="vocabList" class="list"></div></div></section>
-<section id="verbs" class="panel"><div class="card"><h2>Verbs</h2><p class="muted">Preterite forms from your lessons.</p><div id="verbsList" class="list"></div></div></section>
-<section id="lessons" class="panel"><h2>Lessons</h2><div id="lessonsList"></div></section>
-<section id="grammar" class="panel"><div class="card"><h2>Grammar notes</h2><div id="grammarList" class="list"></div></div></section>
-<section id="mistakes" class="panel"><div class="card"><h2>Mistakes to review</h2><div id="mistakesList" class="list"></div></div></section>
-<section id="stats" class="panel"><div id="statsBox" class="card"></div></section>
-</div></div>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mi Español</title>
+
+<style>
+:root{
+  --bg:#f6f8fb;
+  --card:#fff;
+  --line:#dde4ee;
+  --text:#17212b;
+  --muted:#697586;
+  --blue:#2563eb;
+  --green:#16835a;
+  --red:#b42318;
+  --amber:#9a6700;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+}
+
+.wrap{
+  max-width:1180px;
+  margin:auto;
+  padding:20px;
+}
+
+h1,h2,h3{margin-top:0}
+
+.top{
+  display:flex;
+  justify-content:space-between;
+  gap:15px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.muted{color:var(--muted)}
+.small{font-size:13px}
+
+button,input,select{font:inherit}
+
+button{
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:10px;
+  padding:10px 14px;
+  cursor:pointer;
+}
+
+button.primary{
+  background:var(--blue);
+  color:#fff;
+  border-color:var(--blue);
+}
+
+button.active{
+  background:#17212b;
+  color:#fff;
+}
+
+.nav,.toolbar,.modes{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.nav{margin:18px 0}
+
+.panel{display:none}
+.panel.active{display:block}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 4px 15px rgba(0,0,0,.04);
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+}
+
+.stat b{
+  display:block;
+  font-size:26px;
+}
+
+.auth{
+  max-width:460px;
+  margin:70px auto;
+}
+
+.auth input,
+.trainer input,
+.trainer select{
+  width:100%;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  margin:6px 0 12px;
+}
+
+.trainer{max-width:780px}
+
+.prompt{
+  font-size:28px;
+  font-weight:700;
+  margin:18px 0;
+}
+
+.examples{
+  margin:14px 0;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#fafbfe;
+}
+
+.examples-title{
+  font-weight:700;
+  margin-bottom:8px;
+}
+
+.example{
+  margin:8px 0;
+  line-height:1.5;
+}
+
+.example-number{
+  font-weight:700;
+  margin-right:5px;
+}
+
+.blank{
+  display:inline-block;
+  min-width:70px;
+  border-bottom:2px solid #8b96a5;
+  margin:0 2px;
+}
+
+.hintbox{
+  padding:11px 13px;
+  border-radius:10px;
+  margin:10px 0;
+  background:#eef4ff;
+  color:#234a91;
+  border:1px solid #d8e5ff;
+}
+
+.feedback{
+  padding:12px;
+  border-radius:10px;
+  margin-top:12px;
+}
+
+.ok{
+  background:#e9f7ef;
+  color:var(--green);
+}
+
+.bad{
+  background:#fdecec;
+  color:var(--red);
+}
+
+.almost{
+  background:#fff3cd;
+  color:var(--amber);
+}
+
+.choice{
+  display:block;
+  width:100%;
+  text-align:left;
+  margin:8px 0;
+}
+
+.choice.correct-choice{
+  border:2px solid var(--green);
+}
+
+.choice.wrong-choice{
+  border:2px solid var(--red);
+}
+
+.choice.eliminated{
+  opacity:.35;
+  text-decoration:line-through;
+  pointer-events:none;
+}
+
+.list{
+  display:grid;
+  gap:10px;
+}
+
+.item{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px;
+}
+
+.item b{font-size:17px}
+
+.speak{
+  padding:5px 9px;
+  margin-left:8px;
+  border-radius:999px;
+  font-size:13px;
+}
+
+.verbgrid{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(110px,1fr));
+  gap:7px;
+  margin-top:10px;
+}
+
+.verbgrid div{
+  background:#f5f7fa;
+  padding:8px;
+  border-radius:8px;
+}
+
+.lesson{margin-bottom:12px}
+
+.actionbar{margin:12px 0}
+
+@media(max-width:850px){
+  .wrap{padding:12px}
+
+  .grid{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .verbgrid{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .trainer{
+    padding:14px;
+  }
+
+  .prompt{
+    font-size:25px;
+  }
+
+  .modes{
+    overflow-x:auto;
+    flex-wrap:nowrap;
+    padding-bottom:4px;
+  }
+
+  .modes button{
+    white-space:nowrap;
+  }
+
+  .actionbar{
+    position:sticky;
+    bottom:6px;
+    z-index:20;
+    background:rgba(255,255,255,.97);
+    padding:9px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    box-shadow:0 6px 20px rgba(0,0,0,.12);
+  }
+
+  .actionbar button{
+    flex:1;
+    min-height:46px;
+  }
+
+  .trainer input{
+    font-size:20px;
+    min-height:54px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+<div id="authView" class="auth card">
+  <h1>Mi Español</h1>
+  <p class="muted">Your personal Spanish learning space</p>
+
+  <input id="email" type="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+
+  <div class="toolbar">
+    <button id="signin" class="primary">Sign in</button>
+    <button id="signup">Create account</button>
+  </div>
+
+  <div id="authMsg" class="small muted"></div>
+</div>
+
+
+<div id="appView" style="display:none">
+
+<div class="top">
+  <div>
+    <h1>Mi Español</h1>
+    <div class="muted">Vocabulary, grammar, verbs and practice — all in one place</div>
+  </div>
+
+  <button id="signout">Sign out</button>
+</div>
+
+
+<div class="nav">
+  <button data-tab="dashboard" class="active">Dashboard</button>
+  <button data-tab="practice">Practice</button>
+  <button data-tab="vocabulary">Vocabulary</button>
+  <button data-tab="verbs">Verbs</button>
+  <button data-tab="lessons">Lessons</button>
+  <button data-tab="grammar">Grammar</button>
+  <button data-tab="mistakes">Mistakes</button>
+  <button data-tab="stats">Stats</button>
+</div>
+
+
+<section id="dashboard" class="panel active">
+
+<div class="grid">
+
+  <div class="card stat">
+    <span class="muted">Items</span>
+    <b id="stTotal">0</b>
+  </div>
+
+  <div class="card stat">
+    <span class="muted">Mastered</span>
+    <b id="stMastered">0</b>
+  </div>
+
+  <div class="card stat">
+    <span class="muted">Mistakes</span>
+    <b id="stMistakes">0</b>
+  </div>
+
+  <div class="card stat">
+    <span class="muted">Due now</span>
+    <b id="stDue">0</b>
+  </div>
+
+</div>
+
+</section>
+
+
+<section id="practice" class="panel">
+
+<div class="card trainer">
+
+<h2>Practice</h2>
+
+<div class="modes">
+  <button class="mode active" data-mode="typing">Type Spanish</button>
+  <button class="mode" data-mode="multiple">Multiple choice</button>
+  <button class="mode" data-mode="verbs">Verb conjugation</button>
+  <button class="mode" data-mode="grammar">Grammar</button>
+  <button class="mode" data-mode="mixed">Mixed</button>
+</div>
+
+<br>
+
+<select id="scope">
+  <option value="due">Due + new</option>
+  <option value="mistakes">Mistakes only</option>
+  <option value="all">All material</option>
+</select>
+
+<button id="startPractice" class="primary">Start</button>
+
+<div id="counter" class="small muted"></div>
+
+<div id="prompt" class="prompt">
+  Choose a test type and press Start
+</div>
+
+<div id="subprompt" class="muted"></div>
+
+<div id="examplesBox" class="examples" style="display:none"></div>
+
+<div id="hintBox" class="hintbox" style="display:none"></div>
+
+
+<div class="toolbar actionbar">
+
+  <button id="check" class="primary">
+    Check / Next
+  </button>
+
+  <button id="hint">
+    Hint
+  </button>
+
+  <button id="skip">
+    Skip
+  </button>
+
+  <button id="speakAnswer">
+    🔊 Hear Spanish
+  </button>
+
+</div>
+
+
+<input
+  id="answer"
+  placeholder="Type your answer…"
+  enterkeyhint="go"
+  autocomplete="off"
+  autocapitalize="none"
+  spellcheck="false"
+>
+
+<div id="choices"></div>
+
+<div id="feedback"></div>
+
+</div>
+
+</section>
+
+
+<section id="vocabulary" class="panel">
+
+<div class="card">
+
+<h2>Vocabulary & expressions</h2>
+
+<input
+  id="search"
+  placeholder="Search…"
+  style="
+    width:100%;
+    padding:11px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    margin-bottom:12px
+  "
+>
+
+<div id="vocabList" class="list"></div>
+
+</div>
+
+</section>
+
+
+<section id="verbs" class="panel">
+
+<div class="card">
+
+<h2>Verbs</h2>
+
+<div id="verbsList" class="list"></div>
+
+</div>
+
+</section>
+
+
+<section id="lessons" class="panel">
+
+<h2>Lessons</h2>
+
+<div id="lessonsList"></div>
+
+</section>
+
+
+<section id="grammar" class="panel">
+
+<div class="card">
+
+<h2>Grammar notes</h2>
+
+<div id="grammarList" class="list"></div>
+
+</div>
+
+</section>
+
+
+<section id="mistakes" class="panel">
+
+<div class="card">
+
+<h2>Mistakes to review</h2>
+
+<div id="mistakesList" class="list"></div>
+
+</div>
+
+</section>
+
+
+<section id="stats" class="panel">
+
+<div id="statsBox" class="card"></div>
+
+</section>
+
+</div>
+
+</div>
+
+
 <script>
-const SB='https://znsvbksejawhcwjegqzn.supabase.co',KEY='sb_publishable_03UKoYShdACGfxdU6BFuWw_qIP-kJ24',SITE=location.origin;
-let session=JSON.parse(localStorage.getItem('mi_espanol_session')||'null'),items=[],progress=[],lessons=[],queue=[],qi=0,mode='typing',current=null,answered=false,hintLevel=0,autoTimer=null;
-const $=id=>document.getElementById(id),norm=s=>(s||'').toLowerCase().trim().replace(/\s+/g,' '),strip=s=>norm(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-function speakSpanish(text){if(!text||!('speechSynthesis'in window))return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='es-AR';const voices=window.speechSynthesis.getVoices();u.voice=voices.find(v=>/^es-AR/i.test(v.lang))||voices.find(v=>/^es(-|_)/i.test(v.lang))||null;u.rate=.88;window.speechSynthesis.speak(u)}
-function hdr(auth=true){let h={apikey:KEY,'Content-Type':'application/json'};if(auth&&session?.access_token)h.Authorization='Bearer '+session.access_token;return h}
-async function api(path,opt={}){let r=await fetch(SB+path,{...opt,headers:{...hdr(opt.auth!==false),...(opt.headers||{})}}),t=await r.text(),d;try{d=t?JSON.parse(t):null}catch{d=t}if(!r.ok)throw new Error(d?.msg||d?.message||d?.error_description||'HTTP '+r.status);return d}
-function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function lev(a,b){a=norm(a);b=norm(b);let d=Array.from({length:a.length+1},()=>Array(b.length+1).fill(0));for(let i=0;i<=a.length;i++)d[i][0]=i;for(let j=0;j<=b.length;j++)d[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[a.length][b.length]}
-function grade(a,e){if(norm(a)===norm(e))return'correct';if(strip(a)===strip(e))return'almost';let x=lev(a,e);return x===1||(Math.max(a.length,e.length)>=12&&x<=2)?'almost':'incorrect'}
-async function signin(){try{let d=await api('/auth/v1/token?grant_type=password',{method:'POST',auth:false,body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})});session=d;localStorage.setItem('mi_espanol_session',JSON.stringify(d));start()}catch(e){$('authMsg').textContent=e.message}}
-async function signup(){try{let email=$('email').value.trim(),password=$('password').value;if(!email||!password)return $('authMsg').textContent='Enter email and password.';let d=await api('/auth/v1/signup?redirect_to='+encodeURIComponent(SITE),{method:'POST',auth:false,body:JSON.stringify({email,password})});$('authMsg').textContent=d.access_token?'Account created.':'Check your email to confirm your account.'}catch(e){$('authMsg').textContent=e.message}}
-function logout(){localStorage.removeItem('mi_espanol_session');session=null;location.reload()}
-async function load(){items=await api('/rest/v1/study_items?select=*&active=eq.true&order=spanish.asc');progress=await api('/rest/v1/progress?select=*');lessons=await api('/rest/v1/lessons?select=*&order=created_at.asc')}
-function pm(){return new Map(progress.map(x=>[x.item_id,x]))}
-async function start(){try{$('authView').style.display='none';$('appView').style.display='block';await load();render()}catch(e){$('authMsg').textContent=e.message;$('authView').style.display='block';$('appView').style.display='none'}}
-function render(){renderStats();renderVocab();renderVerbs();renderLessons();renderGrammar();renderMistakes()}
-function renderStats(){let p=pm(),now=Date.now(),mastered=0,mist=0,due=0;items.forEach(x=>{let q=p.get(x.id);if(q?.mastery_score>=70)mastered++;if(['almost','incorrect'].includes(q?.last_result))mist++;if(!q||!q.next_review_at||new Date(q.next_review_at)<=now)due++});$('stTotal').textContent=items.length;$('stMastered').textContent=mastered;$('stMistakes').textContent=mist;$('stDue').textContent=due;$('statsBox').innerHTML='<h2>Study statistics</h2><p>Total: <b>'+items.length+'</b></p><p>Mastered: <b>'+mastered+'</b></p><p>Mistakes: <b>'+mist+'</b></p><p>Due/new: <b>'+due+'</b></p>'}
-function renderVocab(){let term=norm($('search')?.value),a=items.filter(x=>['word','expression'].includes(x.item_type)&&(!term||norm(x.spanish+' '+x.english+' '+x.russian).includes(term)));$('vocabList').innerHTML=a.map(x=>'<div class="item" id="item-'+x.id+'"><b>'+esc(x.spanish)+'</b><button class="speak" data-speak="'+esc(x.spanish)+'">🔊</button><span class="pill">'+x.item_type+'</span><div>'+esc(x.english||'')+'</div><div class="muted small">'+esc(x.russian||'')+'</div></div>').join('');bindSpeak()}
-function renderVerbs(){let a=items.filter(x=>x.item_type==='verb');$('verbsList').innerHTML=a.map(x=>{let c=x.conjugation||{},keys=Object.keys(c);return '<div class="item" id="verb-'+x.id+'"><b>'+esc(x.spanish)+'</b><button class="speak" data-speak="'+esc(x.spanish)+'">🔊</button><div>'+esc(x.english||'')+'</div><div class="muted small">'+esc(x.notes||'')+'</div>'+(keys.length?'<div class="verbgrid">'+keys.map(k=>'<div><span class="small muted">'+esc(k)+'</span><br><b>'+esc(c[k])+'</b> <button class="speak" data-speak="'+esc(c[k])+'">🔊</button></div>').join('')+'</div>':'')+'</div>'}).join('');bindSpeak()}
-function bindSpeak(){document.querySelectorAll('[data-speak]').forEach(b=>b.onclick=e=>{e.stopPropagation();speakSpanish(b.dataset.speak)})}
-function renderLessons(){$('lessonsList').innerHTML=lessons.map((x,i)=>'<div class="card lesson"><h3>'+(i+1)+'. '+esc(x.title)+'</h3><p>'+esc(x.summary||'')+'</p><details><summary>Lesson notes</summary><p>'+esc(x.source_notes||'')+'</p></details></div>').join('')}
-function renderGrammar(){let a=items.filter(x=>x.item_type==='grammar');$('grammarList').innerHTML=a.map(x=>'<div class="item" id="grammar-'+x.id+'"><b>'+esc(x.spanish)+'</b><div>'+esc(x.english||'')+'</div><div class="muted">'+esc(x.notes||'')+'</div>'+(x.example?'<div style="margin-top:6px"><i>'+esc(x.example)+'</i> <button class="speak" data-speak="'+esc(x.example)+'">🔊</button></div>':'')+'</div>').join('');bindSpeak()}
-function renderMistakes(){let p=pm(),a=items.filter(x=>['almost','incorrect'].includes(p.get(x.id)?.last_result));$('mistakesList').innerHTML=a.length?a.map(x=>'<div class="item"><b>'+esc(x.spanish)+'</b><button class="speak" data-speak="'+esc(x.spanish)+'">🔊</button><div>'+esc(x.english||'')+'</div></div>').join(''):'<p>No current mistakes.</p>';bindSpeak()}
-function switchTab(tab,target){document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab));document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===tab));setTimeout(()=>{let el=document.getElementById(target);if(el)el.scrollIntoView({behavior:'smooth',block:'center'})},80)}
-function topicFor(){if(current?.type==='verbs'&&current.item)return{label:'Review this verb',tab:'verbs',target:'verb-'+current.item.id};if(current?.type==='grammar'){let g=items.find(x=>x.item_type==='grammar'&&norm(x.spanish).includes(norm(current.topic||'')));return g?{label:'Review this grammar topic',tab:'grammar',target:'grammar-'+g.id}:{label:'Review grammar notes',tab:'grammar',target:'grammarList'}}if(current?.item?.item_type==='verb')return{label:'Review this verb',tab:'verbs',target:'verb-'+current.item.id};if(current?.item)return{label:'Review this item',tab:'vocabulary',target:'item-'+current.item.id};return null}
-function showTopicLink(){let t=topicFor();$('topicLinkWrap').innerHTML=t?'<a href="#" class="topiclink" id="topicJump">↗ '+esc(t.label)+'</a>':'';if(t)$('topicJump').onclick=e=>{e.preventDefault();switchTab(t.tab,t.target)}}
-function pool(){let p=pm(),scope=$('scope').value,now=Date.now(),a=items.filter(x=>['word','expression','verb'].includes(x.item_type)&&x.english);if(scope==='mistakes')a=a.filter(x=>['almost','incorrect'].includes(p.get(x.id)?.last_result));if(scope==='due')a=a.filter(x=>{let q=p.get(x.id);return !q||!q.next_review_at||new Date(q.next_review_at)<=now});return a}
-function rand(a){return a[Math.floor(Math.random()*a.length)]}
-function startPractice(){queue=pool().sort(()=>Math.random()-.5);qi=0;nextQuestion()}
-function examplesFor(){
- let target=current?.expected||current?.item?.spanish||'';
- if(current?.type==='verbs')return ['Ayer, '+target+' durante un momento.','Después, '+target+' otra vez.'];
- if(current?.type==='grammar')return [target,'En otra situación: '+target];
- let it=current?.item||{};
- if(it.item_type==='verb')return ['Quiero '+target+' mañana.','Es importante '+target+' bien.'];
- if(it.item_type==='expression')return ['En una conversación dije: «'+target+'».','Hoy escuché la expresión «'+target+'».'];
- return ['Hoy hablamos de '+target+'.','Necesito recordar '+target+'.'];
+
+const SB =
+'https://znsvbksejawhcwjegqzn.supabase.co';
+
+const KEY =
+'sb_publishable_03UKoYShdACGfxdU6BFuWw_qIP-kJ24';
+
+
+let session =
+JSON.parse(
+  localStorage.getItem('mi_espanol_session') || 'null'
+);
+
+
+let items=[];
+let progress=[];
+let lessons=[];
+
+let queue=[];
+let qi=0;
+
+let mode='typing';
+
+let current=null;
+
+let answered=false;
+
+let hintLevel=0;
+
+let autoTimer=null;
+
+
+const $ =
+id => document.getElementById(id);
+
+
+const norm =
+s => (s||'')
+  .toLowerCase()
+  .trim()
+  .replace(/\s+/g,' ');
+
+
+const strip =
+s => norm(s)
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g,'');
+
+
+
+/* =========================================================
+   NATURAL EXAMPLES
+   ========================================================= */
+
+const EXAMPLES={
+
+"moño":[
+  "Ella llevaba un moño rojo en el pelo.",
+  "Le puse un moño al regalo."
+],
+
+"alquilar":[
+  "Queremos alquilar un departamento en Recoleta.",
+  "Van a alquilar el local por un año."
+],
+
+"inquilino":[
+  "El inquilino paga el alquiler el primer día de cada mes.",
+  "El dueño habló con el inquilino sobre una reparación."
+],
+
+"dueño":[
+  "El dueño del departamento vive en España.",
+  "Hablé con el dueño del restaurante."
+],
+
+"gerente":[
+  "El gerente reunió a todo el equipo.",
+  "Quiero hablar con el gerente del local."
+],
+
+"empleados":[
+  "La empresa contrató a diez empleados nuevos.",
+  "Los empleados llegan a las nueve."
+],
+
+"fábrica":[
+  "Mi abuelo trabajó muchos años en una fábrica.",
+  "La fábrica produce autopartes."
+],
+
+"manejar":[
+  "Aprendí a manejar en Buenos Aires.",
+  "¿Sabés manejar un auto con caja manual?"
+],
+
+"cada tanto":[
+  "Cada tanto salimos a cenar con amigos.",
+  "Voy a Tigre cada tanto."
+],
+
+"alguna vez":[
+  "¿Fuiste alguna vez a Mendoza?",
+  "Alguna vez tenemos que hacer ese viaje."
+],
+
+"de todo un poco":[
+  "En ese mercado venden de todo un poco.",
+  "La reunión tuvo de todo un poco: problemas, ideas y buenas noticias."
+],
+
+"milagro":[
+  "Fue un milagro que nadie se lastimara.",
+  "Llegamos a tiempo de milagro."
+],
+
+"enseñar":[
+  "Mi profesora me enseñó a usar el subjuntivo.",
+  "Me gusta enseñar cosas nuevas a mis hijos."
+],
+
+"olvidar":[
+  "Siempre olvido dónde dejo las llaves.",
+  "No quiero olvidar esta fecha."
+],
+
+"saltar":[
+  "El perro puede saltar muy alto.",
+  "Tuve que saltar un charco."
+],
+
+"aburrido":[
+  "La película me pareció aburrida.",
+  "Estoy aburrido; salgamos a caminar."
+],
+
+"construir":[
+  "Van a construir un edificio nuevo en la esquina.",
+  "Queremos construir una terraza en la casa."
+],
+
+"despegar":[
+  "El avión va a despegar en veinte minutos.",
+  "No pudimos despegar por la tormenta."
+],
+
+"aterrizar":[
+  "El avión aterrizó sin problemas.",
+  "Vamos a aterrizar en Ezeiza a las seis."
+],
+
+"acuatizar":[
+  "El hidroavión puede acuatizar en el lago.",
+  "Tuvimos que acuatizar cerca de la costa."
+],
+
+"licencia":[
+  "Necesito renovar mi licencia de conducir.",
+  "Obtuvo la licencia de piloto el año pasado."
+],
+
+"acuerdo":[
+  "Llegamos a un acuerdo con el proveedor.",
+  "El acuerdo entra en vigencia el mes que viene."
+],
+
+"mudarse":[
+  "Nos vamos a mudar el mes que viene.",
+  "Quieren mudarse a un departamento más grande."
+],
+
+"departamento":[
+  "Alquilamos un departamento en Recoleta.",
+  "El departamento tiene dos dormitorios."
+],
+
+"andar mal":[
+  "La computadora empezó a andar mal ayer.",
+  "Si algo anda mal, llamame."
+],
+
+"venir":[
+  "¿Querés venir a cenar mañana?",
+  "Mis padres van a venir el domingo."
+],
+
+"conocer":[
+  "Quiero conocer el sur de Argentina.",
+  "Conocí a mi vecino en el ascensor."
+],
+
+"seguir":[
+  "Quiero seguir estudiando español.",
+  "Seguimos caminando hasta la plaza."
+],
+
+"querer":[
+  "Quiero aprender a hablar con más fluidez.",
+  "¿Querés tomar un café?"
+],
+
+"lograr":[
+  "Logramos terminar todo a tiempo.",
+  "Quiero lograr un nivel B2 de español."
+],
+
+"levantarse":[
+  "Me levanto temprano todos los días.",
+  "Los domingos me gusta levantarme más tarde."
+],
+
+"despertarse":[
+  "Me desperté a las seis de la mañana.",
+  "El bebé suele despertarse varias veces de noche."
+],
+
+"ducharse":[
+  "Me ducho antes de ir al trabajo.",
+  "Después del gimnasio fui a ducharme."
+],
+
+"dormirse":[
+  "El bebé se durmió enseguida.",
+  "Anoche me costó dormirme."
+],
+
+"acordarse de":[
+  "Me acordé de tu cumpleaños.",
+  "No me acordaba de esa reunión."
+],
+
+"por las dudas":[
+  "Llevá un paraguas por las dudas.",
+  "Guardé una copia por las dudas."
+],
+
+"asistir":[
+  "Voy a asistir a la reunión de mañana.",
+  "Más de cien personas asistieron al evento."
+],
+
+"ganar":[
+  "Queremos ganar el partido.",
+  "Gana un buen sueldo en su trabajo."
+],
+
+"reemplazar":[
+  "Hay que reemplazar esta pieza.",
+  "Van a reemplazar al gerente el mes que viene."
+],
+
+"remontarse a":[
+  "La historia de la empresa se remonta a 1985.",
+  "Esta tradición se remonta a varios siglos atrás."
+],
+
+"mostrar":[
+  "¿Me podés mostrar cómo funciona?",
+  "Le mostré las fotos del viaje."
+],
+
+"sacar":[
+  "Voy a sacar dinero del cajero.",
+  "Sacá una foto antes de irnos."
+],
+
+"casamiento":[
+  "El casamiento fue en una estancia.",
+  "Nos invitaron a un casamiento en noviembre."
+],
+
+"boda":[
+  "La boda empezó a las siete.",
+  "Compramos un regalo para la boda."
+],
+
+"propina":[
+  "Dejamos propina al camarero.",
+  "En Argentina es común dejar propina."
+],
+
+"cliente":[
+  "El cliente pidió hablar con el gerente.",
+  "Tenemos un cliente nuevo esta semana."
+],
+
+"desde":[
+  "Vivo acá desde 2024.",
+  "Trabajo con ellos desde enero."
+],
+
+"desde que":[
+  "No lo veo desde que se mudó.",
+  "Desde que nació el bebé, dormimos menos."
+],
+
+"fijar":[
+  "Tenemos que fijar una fecha para la reunión.",
+  "El banco fijó una nueva tasa."
+],
+
+"establecer":[
+  "La empresa decidió establecer nuevas reglas.",
+  "Tenemos que establecer un límite claro."
+],
+
+"descargar":[
+  "Podés descargar el archivo desde la página.",
+  "Ayudame a descargar las cajas del auto."
+],
+
+"dibujar":[
+  "A mi hijo le encanta dibujar animales.",
+  "Voy a dibujar un plano de la habitación."
+],
+
+"diseñar":[
+  "Contrataron a un arquitecto para diseñar la casa.",
+  "Estamos diseñando una nueva página web."
+],
+
+"tormenta":[
+  "La tormenta empezó de madrugada.",
+  "Cancelaron el vuelo por una tormenta fuerte."
+],
+
+"ruido":[
+  "No pude dormir por el ruido.",
+  "Ese motor hace un ruido raro."
+],
+
+"contar":[
+  "Te voy a contar una historia.",
+  "¿Podés contar cuántas personas hay?"
+],
+
+"anécdota":[
+  "Siempre cuenta la misma anécdota.",
+  "Tengo una anécdota divertida de ese viaje."
+],
+
+"historia":[
+  "Contame la historia desde el principio.",
+  "Es una historia muy interesante."
+],
+
+"a menudo":[
+  "Voy al gimnasio a menudo.",
+  "A menudo cenamos tarde."
+],
+
+"acostumbrarse a":[
+  "Me costó acostumbrarme al horario argentino.",
+  "Con el tiempo te vas a acostumbrar al ruido."
+],
+
+"caerse":[
+  "Cuidado, te podés caer.",
+  "Se cayó de la bicicleta."
+],
+
+"enojarse":[
+  "Se enojó porque llegamos tarde.",
+  "No te enojes por una cosa tan pequeña."
+],
+
+"alegrarse":[
+  "Me alegra verte bien.",
+  "Se alegró mucho cuando recibió la noticia."
+],
+
+"charlar":[
+  "Nos quedamos charlando hasta tarde.",
+  "¿Tenés cinco minutos para charlar?"
+],
+
+"merendar":[
+  "Los chicos van a merendar después de la escuela.",
+  "Solemos merendar café con medialunas."
+],
+
+"merienda":[
+  "Preparé una merienda para los chicos.",
+  "A la tarde hacemos una merienda rápida."
+],
+
+"mermelada":[
+  "Unté la tostada con mermelada.",
+  "Compré mermelada de frutilla."
+],
+
+"reunión":[
+  "Tengo una reunión a las tres.",
+  "La reunión duró casi dos horas."
+],
+
+"todavía no":[
+  "Todavía no terminé el informe.",
+  "¿Llegó? — No, todavía no."
+],
+
+"extrañar":[
+  "Extraño mucho a mi familia.",
+  "Voy a extrañar Buenos Aires cuando me vaya."
+],
+
+"esperar":[
+  "Te espero en la entrada.",
+  "Espero que mañana haga buen tiempo."
+],
+
+"imaginar":[
+  "No puedo imaginar vivir sin internet.",
+  "Imaginate cómo sería viajar por toda Sudamérica."
+],
+
+"cita":[
+  "Tengo una cita con el dentista a las cuatro.",
+  "Salió a una cita con alguien que conoció por internet."
+],
+
+"turno":[
+  "Saqué un turno con el médico para el martes.",
+  "No hay turnos disponibles esta semana."
+],
+
+"fósforos":[
+  "Necesito fósforos para encender la vela.",
+  "Guardá los fósforos lejos de los chicos."
+],
+
+"tirar":[
+  "No tires eso a la basura.",
+  "Tiró la pelota por encima de la pared."
+],
+
+"soltar":[
+  "Soltá mi mano un segundo.",
+  "El perro no quería soltar el juguete."
+],
+
+"peso":[
+  "El médico controló mi peso.",
+  "La valija supera el peso permitido."
+],
+
+"disparar":[
+  "El policía tuvo que disparar al aire.",
+  "No se puede disparar en esta zona."
+],
+
+"pisar":[
+  "Cuidado de no pisar el cable.",
+  "Pisó un charco y se mojó los zapatos."
+],
+
+"baldosas":[
+  "El piso de la cocina tiene baldosas blancas.",
+  "Hay que cambiar varias baldosas rotas."
+],
+
+"profundidad":[
+  "La pileta tiene dos metros de profundidad.",
+  "No sabemos la profundidad exacta del lago."
+],
+
+"techo":[
+  "Tenemos que reparar el techo antes de que llueva.",
+  "El techo de la habitación es muy alto."
+],
+
+"promedio":[
+  "El promedio de ventas subió este mes.",
+  "En promedio, tardamos cuarenta minutos."
+],
+
+"compartir":[
+  "Quiero compartir esta foto con vos.",
+  "Compartimos la misma oficina."
+],
+
+"equipo":[
+  "Nuestro equipo ganó el partido.",
+  "Necesitamos comprar equipo nuevo para el taller."
+],
+
+"cazar":[
+  "Está prohibido cazar en esta reserva.",
+  "Antes la gente cazaba para alimentarse."
+],
+
+"peces":[
+  "Hay muchos peces en este río.",
+  "Los peces necesitan agua limpia."
+],
+
+"cangrejos":[
+  "Vimos cangrejos en la playa.",
+  "Los chicos buscaban cangrejos entre las rocas."
+],
+
+"halcón":[
+  "Vimos un halcón volando sobre el campo.",
+  "El halcón bajó rápidamente hacia el suelo."
+],
+
+"alce":[
+  "Vimos un alce al costado de la ruta.",
+  "El alce es mucho más grande de lo que imaginaba."
+]
+
+};
+
+
+
+function naturalExamples(item){
+
+  const key =
+    norm(item?.spanish || current?.expected || '');
+
+  if(EXAMPLES[key])
+    return EXAMPLES[key];
+
+
+  const s =
+    item?.spanish || current?.expected || '';
+
+
+  if(item?.item_type==='verb'){
+
+    return [
+      `Quiero ${s} esta semana.`,
+      `Ayer intenté ${s}, pero no pude.`
+    ];
+
+  }
+
+
+  if(item?.item_type==='expression'){
+
+    return [
+      `Escuché «${s}» en una conversación.`,
+      `Hoy intenté usar «${s}» al hablar.`
+    ];
+
+  }
+
+
+  return [
+    `Vi «${s}» en un texto en español.`,
+    `Hoy aprendí a usar «${s}» correctamente.`
+  ];
+
 }
+
+
+
+/* =========================================================
+   AUDIO
+   ========================================================= */
+
+function speakSpanish(text){
+
+  if(
+    !text ||
+    !('speechSynthesis' in window)
+  )
+    return;
+
+
+  window.speechSynthesis.cancel();
+
+
+  const u =
+    new SpeechSynthesisUtterance(text);
+
+
+  u.lang='es-AR';
+
+  u.rate=.88;
+
+
+  const voices =
+    window.speechSynthesis.getVoices();
+
+
+  u.voice =
+    voices.find(v=>/^es-AR/i.test(v.lang))
+    ||
+    voices.find(v=>/^es(-|_)/i.test(v.lang))
+    ||
+    null;
+
+
+  window.speechSynthesis.speak(u);
+
+}
+
+
+
+/* =========================================================
+   API
+   ========================================================= */
+
+function hdr(auth=true){
+
+  const h={
+    apikey:KEY,
+    'Content-Type':'application/json'
+  };
+
+
+  if(auth && session?.access_token)
+    h.Authorization='Bearer '+session.access_token;
+
+
+  return h;
+
+}
+
+
+
+async function api(path,opt={}){
+
+  const r =
+    await fetch(
+      SB+path,
+      {
+        ...opt,
+        headers:{
+          ...hdr(opt.auth!==false),
+          ...(opt.headers||{})
+        }
+      }
+    );
+
+
+  const t =
+    await r.text();
+
+
+  let d=null;
+
+
+  try{
+
+    d=t ? JSON.parse(t) : null;
+
+  }catch{
+
+    d=t;
+
+  }
+
+
+  if(!r.ok){
+
+    throw new Error(
+      d?.msg ||
+      d?.message ||
+      d?.error_description ||
+      'HTTP '+r.status
+    );
+
+  }
+
+
+  return d;
+
+}
+
+
+
+/* =========================================================
+   AUTH
+   ========================================================= */
+
+async function signin(){
+
+  try{
+
+    const d =
+      await api(
+        '/auth/v1/token?grant_type=password',
+        {
+          method:'POST',
+          auth:false,
+
+          body:JSON.stringify({
+
+            email:
+              $('email').value.trim(),
+
+            password:
+              $('password').value
+
+          })
+
+        }
+      );
+
+
+    session=d;
+
+
+    localStorage.setItem(
+      'mi_espanol_session',
+      JSON.stringify(d)
+    );
+
+
+    start();
+
+
+  }catch(e){
+
+    $('authMsg').textContent=e.message;
+
+  }
+
+}
+
+
+
+async function signup(){
+
+  try{
+
+    const email=
+      $('email').value.trim();
+
+
+    const password=
+      $('password').value;
+
+
+    if(!email || !password){
+
+      $('authMsg').textContent =
+        'Enter email and password.';
+
+      return;
+
+    }
+
+
+    const d =
+      await api(
+        '/auth/v1/signup?redirect_to='
+        +encodeURIComponent(location.origin),
+
+        {
+
+          method:'POST',
+
+          auth:false,
+
+          body:JSON.stringify({
+            email,
+            password
+          })
+
+        }
+      );
+
+
+    $('authMsg').textContent =
+      d.access_token
+      ? 'Account created.'
+      : 'Check your email to confirm your account.';
+
+
+  }catch(e){
+
+    $('authMsg').textContent=e.message;
+
+  }
+
+}
+
+
+
+function logout(){
+
+  localStorage.removeItem(
+    'mi_espanol_session'
+  );
+
+  location.reload();
+
+}
+
+
+
+/* =========================================================
+   LOAD DATA
+   ========================================================= */
+
+async function load(){
+
+  items =
+    await api(
+      '/rest/v1/study_items'
+      +'?select=*'
+      +'&active=eq.true'
+      +'&order=spanish.asc'
+    );
+
+
+  progress =
+    await api(
+      '/rest/v1/progress?select=*'
+    );
+
+
+  lessons =
+    await api(
+      '/rest/v1/lessons'
+      +'?select=*'
+      +'&order=created_at.asc'
+    );
+
+}
+
+
+
+function pm(){
+
+  return new Map(
+    progress.map(
+      x=>[x.item_id,x]
+    )
+  );
+
+}
+
+
+
+async function start(){
+
+  try{
+
+    $('authView').style.display='none';
+
+    $('appView').style.display='block';
+
+
+    await load();
+
+
+    render();
+
+
+  }catch(e){
+
+    $('authMsg').textContent=e.message;
+
+    $('authView').style.display='block';
+
+    $('appView').style.display='none';
+
+  }
+
+}
+
+
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+
+function render(){
+
+  renderStats();
+
+  renderVocab();
+
+  renderVerbs();
+
+  renderLessons();
+
+  renderGrammar();
+
+  renderMistakes();
+
+}
+
+
+
+function renderStats(){
+
+  const p=pm();
+
+  const now=Date.now();
+
+
+  let mastered=0;
+
+  let mistakes=0;
+
+  let due=0;
+
+
+  items.forEach(x=>{
+
+    const q=p.get(x.id);
+
+
+    if(q?.mastery_score>=70)
+      mastered++;
+
+
+    if(
+      ['almost','incorrect']
+      .includes(q?.last_result)
+    )
+      mistakes++;
+
+
+    if(
+      !q ||
+      !q.next_review_at ||
+      new Date(q.next_review_at)<=now
+    )
+      due++;
+
+  });
+
+
+  $('stTotal').textContent=
+    items.length;
+
+
+  $('stMastered').textContent=
+    mastered;
+
+
+  $('stMistakes').textContent=
+    mistakes;
+
+
+  $('stDue').textContent=
+    due;
+
+
+  $('statsBox').innerHTML=`
+
+    <h2>Study statistics</h2>
+
+    <p>
+      Total:
+      <b>${items.length}</b>
+    </p>
+
+    <p>
+      Mastered:
+      <b>${mastered}</b>
+    </p>
+
+    <p>
+      Mistakes:
+      <b>${mistakes}</b>
+    </p>
+
+    <p>
+      Due / new:
+      <b>${due}</b>
+    </p>
+
+  `;
+
+}
+
+
+
+function bindSpeak(){
+
+  document
+    .querySelectorAll('[data-speak]')
+    .forEach(b=>{
+
+      b.onclick=e=>{
+
+        e.stopPropagation();
+
+        speakSpanish(
+          b.dataset.speak
+        );
+
+      };
+
+    });
+
+}
+
+
+
+function renderVocab(){
+
+  const term=
+    norm($('search')?.value);
+
+
+  const a=
+    items.filter(
+      x=>
+
+      ['word','expression']
+      .includes(x.item_type)
+
+      &&
+
+      (
+        !term
+
+        ||
+
+        norm(
+          x.spanish+' '
+          +x.english+' '
+          +x.russian
+        ).includes(term)
+      )
+    );
+
+
+  $('vocabList').innerHTML=
+    a.map(x=>`
+
+      <div class="item">
+
+        <b>${esc(x.spanish)}</b>
+
+        <button
+          class="speak"
+          data-speak="${esc(x.spanish)}"
+        >
+          🔊
+        </button>
+
+        <div>
+          ${esc(x.english||'')}
+        </div>
+
+        <div class="muted small">
+          ${esc(x.russian||'')}
+        </div>
+
+      </div>
+
+    `).join('');
+
+
+  bindSpeak();
+
+}
+
+
+
+function renderVerbs(){
+
+  const a=
+    items.filter(
+      x=>x.item_type==='verb'
+    );
+
+
+  $('verbsList').innerHTML=
+    a.map(x=>{
+
+      const c=
+        x.conjugation || {};
+
+
+      const keys=
+        Object.keys(c);
+
+
+      return `
+
+      <div class="item">
+
+        <b>${esc(x.spanish)}</b>
+
+        <button
+          class="speak"
+          data-speak="${esc(x.spanish)}"
+        >
+          🔊
+        </button>
+
+        <div>
+          ${esc(x.english||'')}
+        </div>
+
+        <div class="muted small">
+          ${esc(x.notes||'')}
+        </div>
+
+
+        ${
+          keys.length
+
+          ?
+
+          `<div class="verbgrid">
+
+            ${
+              keys.map(k=>`
+
+                <div>
+
+                  <span class="small muted">
+                    ${esc(k)}
+                  </span>
+
+                  <br>
+
+                  <b>
+                    ${esc(c[k])}
+                  </b>
+
+                  <button
+                    class="speak"
+                    data-speak="${esc(c[k])}"
+                  >
+                    🔊
+                  </button>
+
+                </div>
+
+              `).join('')
+            }
+
+          </div>`
+
+          :
+
+          ''
+        }
+
+      </div>
+
+      `;
+
+    }).join('');
+
+
+  bindSpeak();
+
+}
+
+
+
+function renderLessons(){
+
+  $('lessonsList').innerHTML=
+
+    lessons.map(
+      (x,i)=>`
+
+      <div class="card lesson">
+
+        <h3>
+          ${i+1}. ${esc(x.title)}
+        </h3>
+
+        <p>
+          ${esc(x.summary||'')}
+        </p>
+
+        <details>
+
+          <summary>
+            Lesson notes
+          </summary>
+
+          <p>
+            ${esc(x.source_notes||'')}
+          </p>
+
+        </details>
+
+      </div>
+
+    `).join('');
+
+}
+
+
+
+function renderGrammar(){
+
+  const a=
+    items.filter(
+      x=>x.item_type==='grammar'
+    );
+
+
+  $('grammarList').innerHTML=
+
+    a.map(x=>`
+
+      <div class="item">
+
+        <b>
+          ${esc(x.spanish)}
+        </b>
+
+        <div>
+          ${esc(x.english||'')}
+        </div>
+
+        <div class="muted">
+          ${esc(x.notes||'')}
+        </div>
+
+        ${
+          x.example
+          ?
+          `<div style="margin-top:6px">
+
+            <i>
+              ${esc(x.example)}
+            </i>
+
+            <button
+              class="speak"
+              data-speak="${esc(x.example)}"
+            >
+              🔊
+            </button>
+
+          </div>`
+          :
+          ''
+        }
+
+      </div>
+
+    `).join('');
+
+
+  bindSpeak();
+
+}
+
+
+
+function renderMistakes(){
+
+  const p=pm();
+
+
+  const a=
+    items.filter(
+      x=>
+
+      ['almost','incorrect']
+      .includes(
+        p.get(x.id)?.last_result
+      )
+    );
+
+
+  $('mistakesList').innerHTML=
+
+    a.length
+
+    ?
+
+    a.map(x=>`
+
+      <div class="item">
+
+        <b>
+          ${esc(x.spanish)}
+        </b>
+
+        <button
+          class="speak"
+          data-speak="${esc(x.spanish)}"
+        >
+          🔊
+        </button>
+
+        <div>
+          ${esc(x.english||'')}
+        </div>
+
+      </div>
+
+    `).join('')
+
+    :
+
+    '<p>No current mistakes.</p>';
+
+
+  bindSpeak();
+
+}
+
+
+
+/* =========================================================
+   PRACTICE
+   ========================================================= */
+
+function switchTab(tab){
+
+  document
+    .querySelectorAll('.nav button')
+    .forEach(
+      x=>
+        x.classList.toggle(
+          'active',
+          x.dataset.tab===tab
+        )
+    );
+
+
+  document
+    .querySelectorAll('.panel')
+    .forEach(
+      x=>
+        x.classList.toggle(
+          'active',
+          x.id===tab
+        )
+    );
+
+}
+
+
+
+function pool(){
+
+  const p=pm();
+
+  const scope=
+    $('scope').value;
+
+  const now=
+    Date.now();
+
+
+  let a=
+    items.filter(
+      x=>
+
+      ['word','expression','verb']
+      .includes(x.item_type)
+
+      &&
+
+      x.english
+    );
+
+
+  if(scope==='mistakes'){
+
+    a=a.filter(
+      x=>
+
+      ['almost','incorrect']
+      .includes(
+        p.get(x.id)?.last_result
+      )
+    );
+
+  }
+
+
+  if(scope==='due'){
+
+    a=a.filter(x=>{
+
+      const q=
+        p.get(x.id);
+
+
+      return (
+        !q
+        ||
+        !q.next_review_at
+        ||
+        new Date(q.next_review_at)<=now
+      );
+
+    });
+
+  }
+
+
+  return a;
+
+}
+
+
+
+function rand(a){
+
+  return a[
+    Math.floor(
+      Math.random()*a.length
+    )
+  ];
+
+}
+
+
+
+function startPractice(){
+
+  queue=
+    pool()
+    .sort(
+      ()=>Math.random()-.5
+    );
+
+
+  qi=0;
+
+
+  nextQuestion();
+
+}
+
+
+
+/* =========================================================
+   EXAMPLES
+   ========================================================= */
+
 function renderExamples(reveal){
- if(!current){$('examplesBox').style.display='none';return}
- let ex=examplesFor(),target=current.expected||current.item?.spanish||'';
- let html=ex.map((s,i)=>{let shown=reveal?s:s.split(target).join('_____');return '<p><b style="display:inline">'+(i+1)+'.</b> '+esc(shown)+'</p>'}).join('');
- $('examplesBox').innerHTML='<b>Examples</b>'+html;$('examplesBox').style.display='block'
+
+  if(!current){
+
+    $('examplesBox').style.display=
+      'none';
+
+    return;
+
+  }
+
+
+  const target=
+    current.expected;
+
+
+  const examples=
+    current.examples || [];
+
+
+  $('examplesBox').innerHTML=
+
+    `<div class="examples-title">
+       Examples
+     </div>`
+
+    +
+
+    examples
+      .map(
+        (sentence,i)=>{
+
+          let shown=
+            sentence;
+
+
+          if(!reveal){
+
+            shown=
+              sentence
+              .split(target)
+              .join('_____');
+
+          }
+
+
+          return `
+
+          <div class="example">
+
+            <span class="example-number">
+              ${i+1}.
+            </span>
+
+            ${esc(shown)}
+
+          </div>
+
+          `;
+
+        }
+      )
+      .join('');
+
+
+  $('examplesBox').style.display=
+    'block';
+
 }
-function nextQuestion(){clearTimeout(autoTimer);answered=false;hintLevel=0;$('hint').textContent='Hint';$('feedback').className='';$('feedback').innerHTML='';$('choices').innerHTML='';$('hintBox').style.display='none';$('hintBox').innerHTML='';$('answer').value='';$('answer').style.display='block';$('topicLinkWrap').innerHTML='';if(!queue.length){$('prompt').textContent='Nothing in this set right now.';$('subprompt').textContent='Try “All material”.';$('examplesBox').style.display='none';return}
-let type=mode==='mixed'?rand(['typing','multiple','verbs','grammar']):mode;
-if(type==='verbs'){let vp=items.filter(x=>x.item_type==='verb'&&x.conjugation&&Object.keys(x.conjugation).length),v=rand(vp),persons=Object.keys(v.conjugation),person=rand(persons);current={type,item:v,expected:v.conjugation[person],person};$('prompt').textContent='Conjugate “'+v.spanish+'” in Pretérito';$('subprompt').textContent=person+' — '+(v.english||'')}
-else if(type==='grammar'){let qs=[['Choose the correct form: “Yesterday I went home.”','Ayer fui a casa.',['Ayer iba a casa.','Ayer fue a casa.','Ayer soy a casa.'],'Pretérito Perfecto Simple','Think about a completed action yesterday.'],['Choose the habitual past form: “I used to travel to Bariloche.”','Solía viajar a Bariloche.',['Suelo viajar a Bariloche.','Viajé a Bariloche.','Solé viajar a Bariloche.'],'Soler in Imperfecto','This asks for a repeated habit in the past.'],['Which construction means “to remember”?','acordarse de',['acordar a','acostumbrarse de','olvidarse a'],'Acordar ≠ acordarse','This verb is reflexive and takes a preposition.'],['Which form is correct for vos in the present?','vos hablás',['vos hablas','vos habla','vos habláis'],'Vos','Rioplatense vos has its own stressed present ending.'],['Choose the correct third-person preterite of pedir.','pidió',['pedió','pidí','pediste'],'Stem changes e→i / o→u','Some -IR verbs change the stem only in third person.'],['Choose the correct phrase for “at home” as a location.','en casa',['a casa','de casa','al casa'],'Prepositions: a / al / de / del','The question asks for location, not movement.']],q=rand(qs);current={type,expected:q[1],choices:[q[1],...q[2]].sort(()=>Math.random()-.5),topic:q[3],hint:q[4]};$('prompt').textContent=q[0];$('subprompt').textContent='Grammar from your lessons';$('answer').style.display='none';renderChoices()}
-else{let it=queue[qi%queue.length];current={type,item:it,expected:it.spanish};$('prompt').textContent=it.english;$('subprompt').textContent=type==='multiple'?'Choose the Spanish answer':'Type the Spanish answer';if(type==='multiple'){let distract=items.filter(x=>x.id!==it.id&&x.item_type===it.item_type&&x.spanish).sort(()=>Math.random()-.5).slice(0,3).map(x=>x.spanish);current.choices=[it.spanish,...distract].sort(()=>Math.random()-.5);$('answer').style.display='none';renderChoices()}}
-$('counter').textContent=(qi+1)+' / '+Math.max(queue.length,1);showTopicLink();renderExamples(false);if(!current.choices)setTimeout(()=>$('answer').focus(),80)}
-function renderChoices(){$('choices').innerHTML=current.choices.map(c=>'<button class="choice" data-value="'+esc(c)+'">'+esc(c)+'</button>').join('');document.querySelectorAll('.choice').forEach(b=>b.onclick=()=>choose(b))}
-function revealPattern(s,n){let chars=[...s],seen=0;return chars.map(ch=>{if(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(ch)){seen++;return seen<=n?ch:'_'}return ch}).join(' ')}
-function hint(){if(!current||answered)return;hintLevel++;let msg='';if(current.choices){let wrong=[...document.querySelectorAll('.choice')].filter(b=>norm(b.dataset.value)!==norm(current.expected)&&!b.classList.contains('eliminated'));if(wrong.length)rand(wrong).classList.add('eliminated');msg=(current.hint||'One wrong option has been removed.')+' You can press Hint again.'}else{let total=[...current.expected].filter(ch=>/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(ch)).length,reveal=Math.min(hintLevel,total);msg='Hint '+reveal+'/'+total+': '+revealPattern(current.expected,reveal);if(hintLevel===1&&current.item?.russian)msg+=' · Russian: '+current.item.russian}$('hint').textContent='Hint '+hintLevel;$('hintBox').textContent=msg;$('hintBox').style.display='block'}
-async function choose(b){if(answered||b.classList.contains('eliminated'))return;answered=true;let ans=b.dataset.value,g=norm(ans)===norm(current.expected)?'correct':'incorrect';document.querySelectorAll('.choice').forEach(x=>{if(norm(x.dataset.value)===norm(current.expected))x.classList.add('good');else if(x===b)x.classList.add('wrong')});await showResult(g,ans)}
-async function check(){if(!current)return;if(answered){qi++;nextQuestion();return}if(current.choices)return;let ans=$('answer').value.trim();if(!ans)return;answered=true;await showResult(grade(ans,current.expected),ans)}
-async function showResult(g,ans){renderExamples(true);$('feedback').className='feedback '+(g==='correct'?'ok':g==='almost'?'almost':'bad');$('feedback').innerHTML=g==='correct'?'Correct ✅ — next question…':(g==='almost'?'Almost. ':'Incorrect. ')+'Answer: <b>'+esc(current.expected)+'</b>';speakSpanish(current.expected);if(current.item)try{await api('/rest/v1/rpc/record_review',{method:'POST',body:JSON.stringify({p_item_id:current.item.id,p_typed_answer:ans,p_result:g,p_prompt:current.type==='verbs'?(current.item.spanish+' / '+current.person):current.item.english,p_prompt_language:'en'})});await load();renderStats();renderMistakes()}catch(e){}if(g==='correct')autoTimer=setTimeout(()=>{qi++;nextQuestion()},1700)}
-document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab,b.dataset.tab));
-document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{document.querySelectorAll('.mode').forEach(x=>x.classList.remove('active'));b.classList.add('active');mode=b.dataset.mode});
-$('signin').onclick=signin;$('signup').onclick=signup;$('signout').onclick=logout;$('startPractice').onclick=startPractice;$('check').onclick=check;$('hint').onclick=hint;$('skip').onclick=()=>{qi++;nextQuestion()};$('speakAnswer').onclick=()=>current&&speakSpanish(current.expected);$('answer').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();check()}};$('search').oninput=renderVocab;
-if(session?.access_token)start();
-</script></body></html>
+
+
+
+/* =========================================================
+   QUESTIONS
+   ========================================================= */
+
+function grammarQuestion(){
+
+  const qs=[
+
+    {
+
+      q:
+      'Choose the correct form: “Yesterday I went home.”',
+
+      answer:
+      'Ayer fui a casa.',
+
+      wrong:[
+        'Ayer iba a casa.',
+        'Ayer fue a casa.',
+        'Ayer soy a casa.'
+      ],
+
+      examples:[
+        'Ayer fui a casa temprano.',
+        'Después fui a cenar con unos amigos.'
+      ]
+
+    },
+
+
+    {
+
+      q:
+      'Choose the habitual past form: “I used to travel to Bariloche.”',
+
+      answer:
+      'Solía viajar a Bariloche.',
+
+      wrong:[
+        'Suelo viajar a Bariloche.',
+        'Viajé a Bariloche.',
+        'Solé viajar a Bariloche.'
+      ],
+
+      examples:[
+        'Solía viajar a Bariloche todos los inviernos.',
+        'Cuando era más joven, solía viajar mucho.'
+      ]
+
+    },
+
+
+    {
+
+      q:
+      'Which construction means “to remember”?',
+
+      answer:
+      'acordarse de',
+
+      wrong:[
+        'acordar a',
+        'acostumbrarse de',
+        'olvidarse a'
+      ],
+
+      examples:[
+        'Me acordé de tu mensaje.',
+        '¿Te acordás de esa película?'
+      ]
+
+    }
+
+  ];
+
+
+  return rand(qs);
+
+}
+
+
+
+function nextQuestion(){
+
+  clearTimeout(autoTimer);
+
+
+  answered=false;
+
+  hintLevel=0;
+
+
+  $('hint').textContent='Hint';
+
+  $('feedback').className='';
+
+  $('feedback').innerHTML='';
+
+  $('choices').innerHTML='';
+
+  $('hintBox').style.display='none';
+
+  $('hintBox').innerHTML='';
+
+  $('answer').value='';
+
+  $('answer').style.display='block';
+
+
+  if(!queue.length && mode!=='grammar'){
+
+    $('prompt').textContent=
+      'Nothing in this set right now.';
+
+    $('subprompt').textContent=
+      'Try “All material”.';
+
+    $('examplesBox').style.display='none';
+
+    return;
+
+  }
+
+
+  const type=
+    mode==='mixed'
+    ?
+    rand([
+      'typing',
+      'multiple',
+      'verbs',
+      'grammar'
+    ])
+    :
+    mode;
+
+
+
+  if(type==='verbs'){
+
+    const vp=
+      items.filter(
+        x=>
+
+        x.item_type==='verb'
+
+        &&
+
+        x.conjugation
+
+        &&
+
+        Object.keys(
+          x.conjugation
+        ).length
+      );
+
+
+    const v=
+      rand(vp);
+
+
+    const persons=
+      Object.keys(
+        v.conjugation
+      );
+
+
+    const person=
+      rand(persons);
+
+
+    const expected=
+      v.conjugation[person];
+
+
+    current={
+
+      type,
+
+      item:v,
+
+      expected,
+
+      person,
+
+      examples:[
+        `Ayer ${expected} antes de salir.`,
+        `Después ${expected} otra vez.`
+      ]
+
+    };
+
+
+    $('prompt').textContent=
+      `Conjugate “${v.spanish}” in Pretérito`;
+
+
+    $('subprompt').textContent=
+      `${person} — ${v.english||''}`;
+
+  }
+
+
+  else if(type==='grammar'){
+
+    const q=
+      grammarQuestion();
+
+
+    current={
+
+      type,
+
+      expected:q.answer,
+
+      choices:[
+        q.answer,
+        ...q.wrong
+      ]
+      .sort(
+        ()=>Math.random()-.5
+      ),
+
+      examples:
+        q.examples
+
+    };
+
+
+    $('prompt').textContent=
+      q.q;
+
+
+    $('subprompt').textContent=
+      'Grammar from your lessons';
+
+
+    $('answer').style.display=
+      'none';
+
+
+    renderChoices();
+
+  }
+
+
+  else{
+
+    const it=
+      queue[
+        qi%queue.length
+      ];
+
+
+    current={
+
+      type,
+
+      item:it,
+
+      expected:
+        it.spanish,
+
+      examples:
+        naturalExamples(it)
+
+    };
+
+
+    $('prompt').textContent=
+      it.english;
+
+
+    $('subprompt').textContent=
+      type==='multiple'
+      ?
+      'Choose the Spanish answer'
+      :
+      'Type the Spanish answer';
+
+
+    if(type==='multiple'){
+
+      const distract=
+
+        items
+
+        .filter(
+          x=>
+
+          x.id!==it.id
+
+          &&
+
+          x.item_type===it.item_type
+
+          &&
+
+          x.spanish
+        )
+
+        .sort(
+          ()=>Math.random()-.5
+        )
+
+        .slice(0,3)
+
+        .map(
+          x=>x.spanish
+        );
+
+
+      current.choices=
+
+        [
+          it.spanish,
+          ...distract
+        ]
+
+        .sort(
+          ()=>Math.random()-.5
+        );
+
+
+      $('answer').style.display=
+        'none';
+
+
+      renderChoices();
+
+    }
+
+  }
+
+
+  $('counter').textContent=
+
+    (qi+1)
+    +' / '
+    +Math.max(
+      queue.length,
+      1
+    );
+
+
+  renderExamples(false);
+
+
+  if(!current.choices){
+
+    setTimeout(
+      ()=>$('answer').focus(),
+      80
+    );
+
+  }
+
+}
+
+
+
+/* =========================================================
+   CHOICES
+   ========================================================= */
+
+function renderChoices(){
+
+  $('choices').innerHTML=
+
+    current.choices
+      .map(
+        c=>
+
+        `<button
+          class="choice"
+          data-value="${esc(c)}"
+        >
+          ${esc(c)}
+        </button>`
+
+      )
+      .join('');
+
+
+  document
+    .querySelectorAll('.choice')
+    .forEach(
+      b=>
+        b.onclick=
+          ()=>choose(b)
+    );
+
+}
+
+
+
+/* =========================================================
+   HINTS
+   ========================================================= */
+
+function revealPattern(s,n){
+
+  let seen=0;
+
+
+  return [...s]
+    .map(ch=>{
+
+      if(
+        /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/
+        .test(ch)
+      ){
+
+        seen++;
+
+        return (
+          seen<=n
+          ?
+          ch
+          :
+          '_'
+        );
+
+      }
+
+
+      return ch;
+
+    })
+    .join(' ');
+
+}
+
+
+
+function hint(){
+
+  if(!current || answered)
+    return;
+
+
+  hintLevel++;
+
+
+  let msg='';
+
+
+  if(current.choices){
+
+    const wrong=
+
+      [
+        ...document
+        .querySelectorAll('.choice')
+      ]
+
+      .filter(
+        b=>
+
+        norm(
+          b.dataset.value
+        )
+
+        !==
+
+        norm(
+          current.expected
+        )
+
+        &&
+
+        !b.classList.contains(
+          'eliminated'
+        )
+      );
+
+
+    if(wrong.length){
+
+      rand(wrong)
+        .classList
+        .add('eliminated');
+
+    }
+
+
+    msg=
+      'One wrong option has been removed. Press Hint again for another.';
+
+  }
+
+
+  else{
+
+    const total=
+
+      [...current.expected]
+      .filter(
+        ch=>
+          /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/
+          .test(ch)
+      )
+      .length;
+
+
+    const reveal=
+
+      Math.min(
+        hintLevel,
+        total
+      );
+
+
+    msg=
+
+      `Hint ${reveal}/${total}: `
+      +
+      revealPattern(
+        current.expected,
+        reveal
+      );
+
+
+    if(
+      hintLevel===1
+      &&
+      current.item?.russian
+    ){
+
+      msg+=
+        ` · Russian: ${current.item.russian}`;
+
+    }
+
+  }
+
+
+  $('hint').textContent=
+    'Hint '+hintLevel;
+
+
+  $('hintBox').textContent=
+    msg;
+
+
+  $('hintBox').style.display=
+    'block';
+
+}
+
+
+
+/* =========================================================
+   CHECK ANSWERS
+   ========================================================= */
+
+function levenshtein(a,b){
+
+  a=norm(a);
+
+  b=norm(b);
+
+
+  const d=
+    Array.from(
+      {
+        length:a.length+1
+      },
+      ()=>
+        Array(
+          b.length+1
+        )
+        .fill(0)
+    );
+
+
+  for(let i=0;i<=a.length;i++)
+    d[i][0]=i;
+
+
+  for(let j=0;j<=b.length;j++)
+    d[0][j]=j;
+
+
+  for(let i=1;i<=a.length;i++){
+
+    for(let j=1;j<=b.length;j++){
+
+      d[i][j]=Math.min(
+
+        d[i-1][j]+1,
+
+        d[i][j-1]+1,
+
+        d[i-1][j-1]
+        +
+        (
+          a[i-1]===b[j-1]
+          ?
+          0
+          :
+          1
+        )
+
+      );
+
+    }
+
+  }
+
+
+  return d[a.length][b.length];
+
+}
+
+
+
+function gradeAnswer(a,e){
+
+  if(
+    norm(a)===norm(e)
+  )
+    return 'correct';
+
+
+  if(
+    strip(a)===strip(e)
+  )
+    return 'almost';
+
+
+  const distance=
+    levenshtein(a,e);
+
+
+  return (
+    distance===1
+
+    ||
+
+    (
+      Math.max(
+        a.length,
+        e.length
+      )>=12
+
+      &&
+
+      distance<=2
+    )
+  )
+  ?
+  'almost'
+  :
+  'incorrect';
+
+}
+
+
+
+async function choose(b){
+
+  if(
+    answered
+    ||
+    b.classList.contains(
+      'eliminated'
+    )
+  )
+    return;
+
+
+  answered=true;
+
+
+  const ans=
+    b.dataset.value;
+
+
+  const g=
+
+    norm(ans)
+    ===
+    norm(current.expected)
+
+    ?
+
+    'correct'
+
+    :
+
+    'incorrect';
+
+
+  document
+    .querySelectorAll('.choice')
+    .forEach(x=>{
+
+      if(
+        norm(x.dataset.value)
+        ===
+        norm(current.expected)
+      ){
+
+        x.classList.add(
+          'correct-choice'
+        );
+
+      }
+
+      else if(x===b){
+
+        x.classList.add(
+          'wrong-choice'
+        );
+
+      }
+
+    });
+
+
+  await showResult(
+    g,
+    ans
+  );
+
+}
+
+
+
+async function check(){
+
+  if(!current)
+    return;
+
+
+  if(answered){
+
+    qi++;
+
+    nextQuestion();
+
+    return;
+
+  }
+
+
+  if(current.choices)
+    return;
+
+
+  const ans=
+    $('answer').value.trim();
+
+
+  if(!ans)
+    return;
+
+
+  answered=true;
+
+
+  const g=
+    gradeAnswer(
+      ans,
+      current.expected
+    );
+
+
+  await showResult(
+    g,
+    ans
+  );
+
+}
+
+
+
+/* =========================================================
+   RESULT
+   ========================================================= */
+
+async function showResult(g,ans){
+
+  renderExamples(true);
+
+
+  $('feedback').className=
+
+    'feedback '
+
+    +
+
+    (
+      g==='correct'
+      ?
+      'ok'
+      :
+      g==='almost'
+      ?
+      'almost'
+      :
+      'bad'
+    );
+
+
+  $('feedback').innerHTML=
+
+    g==='correct'
+
+    ?
+
+    'Correct ✅ — next question…'
+
+    :
+
+    (
+      g==='almost'
+      ?
+      'Almost. '
+      :
+      'Incorrect. '
+    )
+
+    +
+
+    `Answer: <b>${esc(current.expected)}</b>`;
+
+
+
+  speakSpanish(
+    current.expected
+  );
+
+
+
+  if(current.item){
+
+    try{
+
+      await api(
+
+        '/rest/v1/rpc/record_review',
+
+        {
+
+          method:'POST',
+
+          body:JSON.stringify({
+
+            p_item_id:
+              current.item.id,
+
+            p_typed_answer:
+              ans,
+
+            p_result:
+              g,
+
+            p_prompt:
+
+              current.type==='verbs'
+
+              ?
+
+              `${current.item.spanish} / ${current.person}`
+
+              :
+
+              current.item.english,
+
+            p_prompt_language:
+              'en'
+
+          })
+
+        }
+
+      );
+
+
+      await load();
+
+
+      renderStats();
+
+      renderMistakes();
+
+
+    }catch(e){
+
+      console.error(e);
+
+    }
+
+  }
+
+
+
+  if(g==='correct'){
+
+    autoTimer=
+
+      setTimeout(
+        ()=>{
+
+          qi++;
+
+          nextQuestion();
+
+        },
+        1900
+      );
+
+  }
+
+}
+
+
+
+/* =========================================================
+   EVENTS
+   ========================================================= */
+
+document
+.querySelectorAll('.nav button')
+.forEach(b=>{
+
+  b.onclick=
+    ()=>switchTab(
+      b.dataset.tab
+    );
+
+});
+
+
+document
+.querySelectorAll('.mode')
+.forEach(b=>{
+
+  b.onclick=()=>{
+
+    document
+      .querySelectorAll('.mode')
+      .forEach(
+        x=>
+          x.classList.remove(
+            'active'
+          )
+      );
+
+
+    b.classList.add(
+      'active'
+    );
+
+
+    mode=
+      b.dataset.mode;
+
+  };
+
+});
+
+
+$('signin').onclick=
+  signin;
+
+
+$('signup').onclick=
+  signup;
+
+
+$('signout').onclick=
+  logout;
+
+
+$('startPractice').onclick=
+  startPractice;
+
+
+$('check').onclick=
+  check;
+
+
+$('hint').onclick=
+  hint;
+
+
+$('skip').onclick=
+  ()=>{
+
+    qi++;
+
+    nextQuestion();
+
+  };
+
+
+$('speakAnswer').onclick=
+  ()=>{
+
+    if(current)
+      speakSpanish(
+        current.expected
+      );
+
+  };
+
+
+$('answer').addEventListener(
+  'keydown',
+  e=>{
+
+    if(e.key==='Enter'){
+
+      e.preventDefault();
+
+      check();
+
+    }
+
+  }
+);
+
+
+$('search').oninput=
+  renderVocab;
+
+
+
+if(session?.access_token)
+  start();
+
+</script>
+
+</body>
+</html>
