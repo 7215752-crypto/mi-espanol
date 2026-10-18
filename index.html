@@ -269,6 +269,8 @@ button.active{
 .conj-form{font-weight:800}
 .verb-examples{display:none;margin-top:14px;padding:14px;border-radius:12px;background:#fffdf7;border:1px solid #eadfbe}
 .verb-examples.open{display:block}
+.verb-example-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px}
+.verb-example-tabs button.active{background:#17212b;color:#fff}
 .verb-example{padding:8px 0;border-bottom:1px solid #eee7d5;line-height:1.45}
 .verb-example:last-child{border-bottom:0}
 .verb-test{display:none;margin-top:14px;padding:14px;border-radius:12px;background:#f8fbff;border:1px solid #dbe7fb}
@@ -2030,59 +2032,136 @@ function closeCheatsheet(){
 }
 
 
-function verbUsageExamples(item){
-  const key=norm(item.spanish||'');
-  if(EXAMPLES[key]) return EXAMPLES[key];
-
-  const custom={
-    'acordarse de':['Me acordé de tu mensaje esta mañana.','¿Te acordás de dónde dejamos el auto?'],
-    'acostarse':['Me acuesto cerca de las once.','Ayer me acosté muy tarde.'],
-    'afeitarse':['Me afeito antes de ir al trabajo.','Hoy no tuve tiempo de afeitarme.'],
-    'andar':['Ando mucho por el centro durante la semana.','Este reloj ya no anda.'],
-    'ascender':['Lo ascendieron a gerente el año pasado.','El avión empezó a ascender después del despegue.'],
-    'bañarse':['Los chicos quieren bañarse en la pileta.','Me bañé antes de salir.'],
-    'comer':['Comemos juntos los domingos.','Ayer comí demasiado.'],
-    'competir':['Nuestra empresa compite con varias cadenas grandes.','Los atletas van a competir mañana.'],
-    'concluir':['La reunión concluyó a las seis.','Podemos concluir que la idea funcionó.'],
-    'convertirse':['La idea se convirtió en un proyecto real.','Con los años se convirtió en un experto.'],
-    'deber':['Debés descansar un poco más.','Debo llamar al banco mañana.'],
-    'decir':['Decime la verdad.','Ayer me dijo que llegaría tarde.'],
-    'derribar':['La tormenta derribó varios árboles.','Tuvieron que derribar una pared para ampliar el local.'],
-    'despedir':['La empresa decidió despedir a dos empleados.','Fuimos al aeropuerto a despedir a nuestros amigos.'],
-    'despedirse de alguien':['Antes de irme, fui a despedirme de mis amigos.','No me gusta despedirme por mensaje.'],
-    'despertarse':['Me desperté a las seis de la mañana.','El bebé suele despertarse varias veces de noche.'],
-    'distraerse':['Me distraigo cuando hay mucho ruido.','Los chicos se distrajeron con el teléfono.'],
-    'dormirse':['El bebé se durmió enseguida.','Anoche me costó dormirme.'],
-    'ducharse':['Me ducho antes de ir al trabajo.','Después del gimnasio fui a ducharme.'],
-    'elegir':['Tenés que elegir una de las dos opciones.','Elegimos un hotel cerca del centro.'],
-    'ir':['Voy al trabajo en auto.','Ayer fui al centro.'],
-    'lavarse los dientes':['Los chicos se lavan los dientes antes de dormir.','No te olvides de lavarte los dientes.'],
-    'peinarse':['Se peinó antes de salir.','Mi hijo no quiere peinarse.'],
-    'pedir':['Voy a pedir una pizza.','Ayer pedí un café y una medialuna.'],
-    'querer':['Quiero aprender a hablar con más fluidez.','¿Querés tomar un café?'],
-    'seguir':['Quiero seguir estudiando español.','Seguimos caminando hasta la plaza.'],
-    'soler':['Suelo desayunar a las ocho.','Antes solía viajar más seguido.'],
-    'venir':['¿Querés venir a cenar mañana?','Mis padres vinieron el domingo.'],
-    'vivir':['Vivo en Buenos Aires.','Antes vivíamos más lejos del centro.']
+function verbUsageExamples(item,tense='present'){
+  const k=norm(item.spanish||'');
+  const map={
+    'venir':{
+      present:['¿Querés venir a cenar mañana?','Mis padres vienen el domingo.'],
+      indefinido:['Ayer vine temprano.','Mis padres vinieron el domingo.'],
+      imperfecto:['Antes venía seguido a este barrio.','Cuando era chico, mis abuelos venían todos los domingos.']
+    },
+    'dormirse':{
+      present:['El bebé se duerme rápido después de comer.','Me duermo cerca de la medianoche.'],
+      indefinido:['El bebé se durmió enseguida.','Anoche me dormí muy tarde.'],
+      imperfecto:['Antes me dormía más temprano.','El bebé se dormía en brazos.']
+    },
+    'pedir':{
+      present:['Siempre pido café sin azúcar.','¿Qué pedís normalmente para desayunar?'],
+      indefinido:['Ayer pedí un café y una medialuna.','Pidieron la cuenta después de cenar.'],
+      imperfecto:['De chico pedía helado de chocolate.','Siempre pedíamos la mesa de la ventana.']
+    },
+    'querer':{
+      present:['Quiero aprender a hablar con más fluidez.','¿Querés tomar un café?'],
+      indefinido:['Quise llamarte ayer.','Ellos quisieron quedarse un día más.'],
+      imperfecto:['Cuando era chico quería ser piloto.','Antes queríamos vivir cerca del centro.']
+    },
+    'seguir':{
+      present:['Quiero seguir estudiando español.','Seguimos trabajando en el proyecto.'],
+      indefinido:['Seguimos caminando hasta la plaza.','Ella siguió trabajando después de cenar.'],
+      imperfecto:['Antes seguía esa serie todas las semanas.','Seguíamos viviendo en el mismo barrio.']
+    },
+    'ir':{
+      present:['Voy al trabajo en auto.','¿Vas al centro hoy?'],
+      indefinido:['Ayer fui al centro.','Fuimos a cenar después del teatro.'],
+      imperfecto:['Antes iba al trabajo en subte.','De chicos íbamos al club todos los sábados.']
+    },
+    'decir':{
+      present:['Siempre digo la verdad.','¿Qué decís cuando no entendés?'],
+      indefinido:['Ayer dije que no podía ir.','Me dijo que llegaría tarde.'],
+      imperfecto:['Mi abuelo siempre decía lo mismo.','Antes te decía todo por teléfono.']
+    },
+    'andar':{
+      present:['Ando mucho por el centro durante la semana.','¿Cómo anda tu auto?'],
+      indefinido:['Ayer anduve todo el día por el centro.','Anduvimos varias horas por la ciudad.'],
+      imperfecto:['Antes andaba en bicicleta todos los días.','El reloj andaba mal desde hacía meses.']
+    },
+    'comer':{
+      present:['Comemos juntos los domingos.','¿Qué comés normalmente al mediodía?'],
+      indefinido:['Ayer comí demasiado.','Comimos en un restaurante nuevo.'],
+      imperfecto:['De chico comía mucha pasta.','Siempre comíamos tarde en verano.']
+    },
+    'vivir':{
+      present:['Vivo en Buenos Aires.','Mis padres viven lejos del centro.'],
+      indefinido:['Viví dos años en España.','Ellos vivieron en Córdoba antes de mudarse.'],
+      imperfecto:['Antes vivíamos más lejos del centro.','Cuando era chico vivía cerca del río.']
+    },
+    'levantarse':{
+      present:['Me levanto temprano todos los días.','Los domingos nos levantamos más tarde.'],
+      indefinido:['Hoy me levanté a las seis.','Ayer se levantaron muy temprano.'],
+      imperfecto:['Antes me levantaba más tarde.','Cuando trabajaba de noche, me levantaba al mediodía.']
+    },
+    'despertarse':{
+      present:['Me despierto a las siete.','El bebé se despierta varias veces de noche.'],
+      indefinido:['Me desperté a las seis de la mañana.','El bebé se despertó llorando.'],
+      imperfecto:['Antes me despertaba sin alarma.','El bebé se despertaba cada dos horas.']
+    },
+    'acostarse':{
+      present:['Me acuesto cerca de las once.','Los chicos se acuestan temprano.'],
+      indefinido:['Anoche me acosté muy tarde.','Nos acostamos después de la película.'],
+      imperfecto:['Antes me acostaba más temprano.','En verano nos acostábamos después de medianoche.']
+    },
+    'acordarse de':{
+      present:['Me acuerdo de tu cumpleaños.','¿Te acordás de esa película?'],
+      indefinido:['Me acordé de tu mensaje esta mañana.','Se acordaron de comprar pan.'],
+      imperfecto:['Antes me acordaba de todos los nombres.','Nunca se acordaba de cerrar la puerta.']
+    },
+    'alquilar':{
+      present:['Alquilamos un departamento en Recoleta.','¿Alquilás o sos dueño?'],
+      indefinido:['El año pasado alquilamos una casa.','Alquilé un auto por tres días.'],
+      imperfecto:['Antes alquilábamos un departamento más chico.','Cuando vivía solo, alquilaba cerca del trabajo.']
+    },
+    'manejar':{
+      present:['Manejo todos los días.','¿Sabés manejar un auto con caja manual?'],
+      indefinido:['Ayer manejé hasta Tigre.','Manejamos toda la noche.'],
+      imperfecto:['Antes manejaba mucho menos.','Cuando vivía afuera, manejaba al trabajo todos los días.']
+    }
   };
-  if(custom[key]) return custom[key];
 
-  const p=verbParts(item.spanish);
-  if(p.reflexive){
+  if(map[k]?.[tense]) return map[k][tense];
+
+  // Use curated examples for present/general usage when available
+  if(tense==='present' && EXAMPLES[k]) return EXAMPLES[k];
+
+  const forms=getVerbForms(item,tense);
+  if(!forms) return ['No examples available for this tense yet.'];
+  const yo=forms[0], nosotros=forms[3];
+
+  if(tense==='present'){
     return [
-      'Me gusta usar este verbo en conversaciones cotidianas.',
-      'Ayer lo usé hablando de mi rutina.'
+      'Hoy '+yo+' en una situación cotidiana.',
+      'Normalmente '+nosotros+' cuando hace falta.'
+    ];
+  }
+  if(tense==='indefinido'){
+    return [
+      'Ayer '+yo+' sin problema.',
+      'La semana pasada '+nosotros+' juntos.'
     ];
   }
   return [
-    'Uso este verbo con frecuencia en conversaciones cotidianas.',
-    'Ayer lo usé para contar lo que pasó.'
+    'Antes '+yo+' con más frecuencia.',
+    'Cuando éramos más jóvenes, '+nosotros+' todos los fines de semana.'
   ];
+}
+
+function setVerbExampleTense(id,tense){
+  const item=items.find(x=>x.id===id);
+  const box=document.getElementById('vexamples-'+id);
+  if(!item||!box) return;
+  box.querySelectorAll('.verb-example-tab').forEach(b=>b.classList.toggle('active',b.dataset.tense===tense));
+  const body=box.querySelector('.verb-example-body');
+  const label=VERB_TENSES.find(x=>x[0]===tense)?.[1]||tense;
+  body.innerHTML=verbUsageExamples(item,tense).map((s,i)=>
+    '<div class="verb-example"><b>'+(i+1)+'.</b> '+esc(s)+' <button class="speak" data-speak="'+esc(s)+'">🔊</button></div>'
+  ).join('');
+  bindSpeak();
 }
 
 function toggleVerbExamples(id){
   const box=document.getElementById('vexamples-'+id);
-  if(box) box.classList.toggle('open');
+  if(!box) return;
+  box.classList.toggle('open');
+  if(box.classList.contains('open')) setVerbExampleTense(id,'present');
 }
 
 function filteredVerbs(){
@@ -2132,7 +2211,10 @@ function renderVerbs(){
 
         <div class="verb-examples" id="vexamples-${x.id}">
           <div style="font-weight:800;margin-bottom:5px">Real usage examples</div>
-          ${verbUsageExamples(x).map((s,i)=>'<div class="verb-example"><b>'+(i+1)+'.</b> '+esc(s)+' <button class="speak" data-speak="'+esc(s)+'">🔊</button></div>').join('')}
+          <div class="verb-example-tabs">
+            ${VERB_TENSES.map(([k,label])=>'<button class="verb-example-tab '+(k==='present'?'active':'')+'" data-tense="'+k+'" onclick="setVerbExampleTense(\''+x.id+'\',\''+k+'\')">'+label+'</button>').join('')}
+          </div>
+          <div class="verb-example-body"></div>
         </div>
 
         <div class="verb-test" id="vtest-${x.id}">
