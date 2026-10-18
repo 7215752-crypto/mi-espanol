@@ -239,6 +239,47 @@ button.active{
 
 .actionbar{margin:12px 0}
 
+
+.verb-toolbar{
+  display:grid;
+  grid-template-columns:minmax(220px,1fr) 190px auto;
+  gap:10px;
+  margin-bottom:16px;
+}
+.verb-toolbar input,.verb-toolbar select{
+  width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff;
+}
+.verb-card{padding:16px}
+.verb-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.verb-title{font-size:20px;font-weight:800}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.badge{font-size:12px;font-weight:700;padding:4px 8px;border-radius:999px;background:#eef2f7;border:1px solid var(--line)}
+.badge.irregular{background:#fff0f0;color:#9d1c1c}
+.badge.reflexive{background:#eef7ff;color:#174ea6}
+.badge.stem{background:#fff6df;color:#865c00}
+.badge.regular{background:#edf8f2;color:#176b49}
+.verb-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.conj-wrap{display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:14px}
+.conj-wrap.open{display:block}
+.tense-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.tense-tabs button.active{background:#17212b;color:#fff}
+.conj-table{display:grid;grid-template-columns:repeat(5,minmax(105px,1fr));gap:7px}
+.conj-cell{background:#f5f7fa;padding:9px;border-radius:9px}
+.conj-person{font-size:12px;color:var(--muted);margin-bottom:3px}
+.conj-form{font-weight:800}
+.verb-test{display:none;margin-top:14px;padding:14px;border-radius:12px;background:#f8fbff;border:1px solid #dbe7fb}
+.verb-test.open{display:block}
+.verb-test-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.verb-test input,.verb-test select{width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;background:#fff}
+.test-feedback{margin-top:8px;font-weight:700}
+.cheat-modal{display:none;position:fixed;inset:0;background:rgba(10,16,24,.55);z-index:1000;padding:24px;overflow:auto}
+.cheat-modal.open{display:block}
+.cheat-card{max-width:900px;margin:30px auto;background:#fff;border-radius:18px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.cheat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.cheat-box{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafbfe}
+.cheat-box table{width:100%;border-collapse:collapse;font-size:13px}
+.cheat-box td{padding:4px 3px;border-bottom:1px solid #edf0f4}
+
 @media(max-width:850px){
   .wrap{padding:12px}
 
@@ -267,6 +308,10 @@ button.active{
   .modes button{
     white-space:nowrap;
   }
+  .verb-toolbar{grid-template-columns:1fr}
+  .conj-table{grid-template-columns:1fr 1fr}
+  .verb-test-row{grid-template-columns:1fr}
+  .cheat-grid{grid-template-columns:1fr}
 
   .actionbar{
     position:sticky;
@@ -470,10 +515,89 @@ button.active{
 
 <div class="card">
 
-<h2>Verbs</h2>
+<div class="top">
+  <div>
+    <h2 style="margin-bottom:4px">Verbs</h2>
+    <div class="muted">Learn the type, test yourself, then reveal the conjugation.</div>
+  </div>
+  <button class="primary" onclick="openCheatsheet()">⚡ Quick cheatsheet</button>
+</div>
+
+<div class="verb-toolbar">
+  <input id="verbSearch" placeholder="Search verbs…" oninput="renderVerbs()">
+  <select id="verbTypeFilter" onchange="renderVerbs()">
+    <option value="all">All verbs</option>
+    <option value="regular">Regular</option>
+    <option value="irregular">Irregular</option>
+    <option value="reflexive">Reflexive</option>
+  </select>
+  <button onclick="startRandomVerbTest()">🎯 Random test</button>
+</div>
 
 <div id="verbsList" class="list"></div>
 
+</div>
+
+<div id="cheatModal" class="cheat-modal" onclick="if(event.target===this)closeCheatsheet()">
+  <div class="cheat-card">
+    <div class="top">
+      <div>
+        <h2 style="margin-bottom:4px">Quick verb cheatsheet</h2>
+        <div class="muted">The three tenses you are studying now.</div>
+      </div>
+      <button onclick="closeCheatsheet()">✕ Close</button>
+    </div>
+    <div class="cheat-grid">
+      <div class="cheat-box">
+        <h3>Presente</h3>
+        <table>
+          <tr><td></td><td>-AR</td><td>-ER</td><td>-IR</td></tr>
+          <tr><td>yo</td><td>-o</td><td>-o</td><td>-o</td></tr>
+          <tr><td>vos</td><td>-ás</td><td>-és</td><td>-ís</td></tr>
+          <tr><td>él/ella</td><td>-a</td><td>-e</td><td>-e</td></tr>
+          <tr><td>nosotros</td><td>-amos</td><td>-emos</td><td>-imos</td></tr>
+          <tr><td>ellos</td><td>-an</td><td>-en</td><td>-en</td></tr>
+        </table>
+      </div>
+      <div class="cheat-box">
+        <h3>Indefinido</h3>
+        <table>
+          <tr><td></td><td>-AR</td><td>-ER/-IR</td></tr>
+          <tr><td>yo</td><td>-é</td><td>-í</td></tr>
+          <tr><td>vos</td><td>-aste</td><td>-iste</td></tr>
+          <tr><td>él/ella</td><td>-ó</td><td>-ió</td></tr>
+          <tr><td>nosotros</td><td>-amos</td><td>-imos</td></tr>
+          <tr><td>ellos</td><td>-aron</td><td>-ieron</td></tr>
+        </table>
+      </div>
+      <div class="cheat-box">
+        <h3>Imperfecto</h3>
+        <table>
+          <tr><td></td><td>-AR</td><td>-ER/-IR</td></tr>
+          <tr><td>yo</td><td>-aba</td><td>-ía</td></tr>
+          <tr><td>vos</td><td>-abas</td><td>-ías</td></tr>
+          <tr><td>él/ella</td><td>-aba</td><td>-ía</td></tr>
+          <tr><td>nosotros</td><td>-ábamos</td><td>-íamos</td></tr>
+          <tr><td>ellos</td><td>-aban</td><td>-ían</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="cheat-grid" style="margin-top:12px">
+      <div class="cheat-box">
+        <h3>Reflexive</h3>
+        <p><b>me · te · se · nos · se</b></p>
+        <p class="small muted">me levanto · te levantás · se levanta…</p>
+      </div>
+      <div class="cheat-box">
+        <h3>Indefinido irregular roots</h3>
+        <p class="small"><b>tener → tuv-</b><br><b>venir → vin-</b><br><b>querer → quis-</b><br><b>andar → anduv-</b><br><b>poner → pus-</b><br><b>decir → dij-</b></p>
+      </div>
+      <div class="cheat-box">
+        <h3>Key contrast</h3>
+        <p class="small"><b>Indefinido</b> = completed event.<br><b>Imperfecto</b> = background, habit, ongoing state.</p>
+      </div>
+    </div>
+  </div>
 </div>
 
 </section>
@@ -1591,97 +1715,384 @@ function renderVocab(){
 
 
 
+
+const VERB_PERSONS=['yo','vos','él/ella/usted','nosotros','ellos/ustedes'];
+const VERB_TENSES=[
+  ['present','Presente'],
+  ['indefinido','Indefinido'],
+  ['imperfecto','Imperfecto']
+];
+
+const VERB_SPECIAL={
+  'ir':{
+    present:['voy','vas','va','vamos','van'],
+    indefinido:['fui','fuiste','fue','fuimos','fueron'],
+    imperfecto:['iba','ibas','iba','íbamos','iban']
+  },
+  'decir':{
+    present:['digo','decís','dice','decimos','dicen'],
+    indefinido:['dije','dijiste','dijo','dijimos','dijeron'],
+    imperfecto:['decía','decías','decía','decíamos','decían']
+  },
+  'venir':{
+    present:['vengo','venís','viene','venimos','vienen'],
+    indefinido:['vine','viniste','vino','vinimos','vinieron'],
+    imperfecto:['venía','venías','venía','veníamos','venían']
+  },
+  'querer':{
+    present:['quiero','querés','quiere','queremos','quieren'],
+    indefinido:['quise','quisiste','quiso','quisimos','quisieron'],
+    imperfecto:['quería','querías','quería','queríamos','querían']
+  },
+  'andar':{
+    present:['ando','andás','anda','andamos','andan'],
+    indefinido:['anduve','anduviste','anduvo','anduvimos','anduvieron'],
+    imperfecto:['andaba','andabas','andaba','andábamos','andaban']
+  },
+  'componer':{
+    present:['compongo','componés','compone','componemos','componen'],
+    indefinido:['compuse','compusiste','compuso','compusimos','compusieron'],
+    imperfecto:['componía','componías','componía','componíamos','componían']
+  },
+  'obtener':{
+    present:['obtengo','obtenés','obtiene','obtenemos','obtienen'],
+    indefinido:['obtuve','obtuviste','obtuvo','obtuvimos','obtuvieron'],
+    imperfecto:['obtenía','obtenías','obtenía','obteníamos','obtenían']
+  },
+  'pedir':{
+    present:['pido','pedís','pide','pedimos','piden'],
+    indefinido:['pedí','pediste','pidió','pedimos','pidieron'],
+    imperfecto:['pedía','pedías','pedía','pedíamos','pedían']
+  },
+  'seguir':{
+    present:['sigo','seguís','sigue','seguimos','siguen'],
+    indefinido:['seguí','seguiste','siguió','seguimos','siguieron'],
+    imperfecto:['seguía','seguías','seguía','seguíamos','seguían']
+  },
+  'dormir':{
+    present:['duermo','dormís','duerme','dormimos','duermen'],
+    indefinido:['dormí','dormiste','durmió','dormimos','durmieron'],
+    imperfecto:['dormía','dormías','dormía','dormíamos','dormían']
+  },
+  'convertir':{
+    present:['convierto','convertís','convierte','convertimos','convierten'],
+    indefinido:['convertí','convertiste','convirtió','convertimos','convirtieron'],
+    imperfecto:['convertía','convertías','convertía','convertíamos','convertían']
+  },
+  'distraer':{
+    present:['distraigo','distraés','distrae','distraemos','distraen'],
+    indefinido:['distraje','distrajiste','distrajo','distrajimos','distrajeron'],
+    imperfecto:['distraía','distraías','distraía','distraíamos','distraían']
+  },
+  'acordar':{
+    present:['acuerdo','acordás','acuerda','acordamos','acuerdan']
+  },
+  'acostar':{
+    present:['acuesto','acostás','acuesta','acostamos','acuestan']
+  },
+  'despertar':{
+    present:['despierto','despertás','despierta','despertamos','despiertan']
+  },
+  'contar':{
+    present:['cuento','contás','cuenta','contamos','cuentan']
+  },
+  'mostrar':{
+    present:['muestro','mostrás','muestra','mostramos','muestran']
+  },
+  'elegir':{
+    present:['elijo','elegís','elige','elegimos','eligen'],
+    indefinido:['elegí','elegiste','eligió','elegimos','eligieron']
+  },
+  'competir':{
+    present:['compito','competís','compite','competimos','compiten'],
+    indefinido:['competí','competiste','compitió','competimos','compitieron']
+  },
+  'despedir':{
+    present:['despido','despedís','despide','despedimos','despiden'],
+    indefinido:['despedí','despediste','despidió','despedimos','despidieron']
+  },
+  'construir':{
+    present:['construyo','construís','construye','construimos','construyen'],
+    indefinido:['construí','construiste','construyó','construimos','construyeron']
+  },
+  'concluir':{
+    present:['concluyo','concluís','concluye','concluimos','concluyen'],
+    indefinido:['concluí','concluiste','concluyó','concluimos','concluyeron']
+  },
+  'conocer':{
+    present:['conozco','conocés','conoce','conocemos','conocen']
+  },
+  'establecer':{
+    present:['establezco','establecés','establece','establecemos','establecen']
+  },
+  'soler':{
+    present:['suelo','solés','suele','solemos','suelen'],
+    imperfecto:['solía','solías','solía','solíamos','solían']
+  }
+};
+
+function verbParts(spanish){
+  const raw=(spanish||'').trim();
+  const first=raw.split(/\s+/)[0];
+  const suffix=raw.slice(first.length);
+  const reflexive=first.endsWith('se');
+  const base=reflexive?first.slice(0,-2):first;
+  return {raw,first,suffix,reflexive,base};
+}
+
+function regularForms(base,tense){
+  const ending=base.slice(-2);
+  const stem=base.slice(0,-2);
+  if(!['ar','er','ir'].includes(ending)) return null;
+
+  if(tense==='present'){
+    const e=ending==='ar'
+      ?['o','ás','a','amos','an']
+      :ending==='er'
+      ?['o','és','e','emos','en']
+      :['o','ís','e','imos','en'];
+    return e.map(x=>stem+x);
+  }
+
+  if(tense==='imperfecto'){
+    const e=ending==='ar'
+      ?['aba','abas','aba','ábamos','aban']
+      :['ía','ías','ía','íamos','ían'];
+    return e.map(x=>stem+x);
+  }
+
+  if(tense==='indefinido'){
+    const e=ending==='ar'
+      ?['é','aste','ó','amos','aron']
+      :['í','iste','ió','imos','ieron'];
+    let out=e.map(x=>stem+x);
+    if(base.endsWith('car')) out[0]=base.slice(0,-3)+'qué';
+    if(base.endsWith('gar')) out[0]=base.slice(0,-3)+'gué';
+    if(base.endsWith('zar')) out[0]=base.slice(0,-3)+'cé';
+    return out;
+  }
+  return null;
+}
+
+function applyReflexive(forms,reflexive){
+  if(!forms) return null;
+  if(!reflexive) return forms;
+  const p=['me','te','se','nos','se'];
+  return forms.map((x,i)=>p[i]+' '+x);
+}
+
+function getVerbForms(item,tense){
+  const p=verbParts(item.spanish);
+  let forms=(VERB_SPECIAL[p.base]&&VERB_SPECIAL[p.base][tense]) || regularForms(p.base,tense);
+
+  // Prefer the already learned exact Indefinido forms stored in Supabase.
+  if(tense==='indefinido' && item.conjugation && !item.conjugation.present){
+    const c=item.conjugation;
+    const exact=[c['yo'],c['vos'],c['él/ella/usted'],c['nosotros'],c['ellos/ustedes']];
+    if(exact.every(Boolean)) return exact;
+  }
+
+  forms=applyReflexive(forms,p.reflexive);
+  if(!forms) return null;
+  return forms.map(x=>x+p.suffix);
+}
+
+function verbMeta(item){
+  const p=verbParts(item.spanish);
+  const allSpecial=!!VERB_SPECIAL[p.base];
+  const stem=/→/.test(item.notes||'') || ['pedir','seguir','dormir','convertir','acordar','acostar','despertar','contar','mostrar','elegir','competir','despedir'].includes(p.base);
+  const irregular=allSpecial || /irregular|like poner/i.test(item.notes||'');
+  const orth=/[cgz]ar$/.test(p.base);
+  return {
+    reflexive:p.reflexive,
+    irregular,
+    stem,
+    orth,
+    regular:!irregular && !stem
+  };
+}
+
+function verbBadges(item){
+  const m=verbMeta(item);
+  const b=[];
+  b.push(m.regular?'<span class="badge regular">Regular</span>':'<span class="badge irregular">Irregular</span>');
+  if(m.reflexive) b.push('<span class="badge reflexive">Reflexive</span>');
+  if(m.stem) b.push('<span class="badge stem">Stem-changing</span>');
+  if(m.orth) b.push('<span class="badge">Spelling change in yo (Indefinido)</span>');
+  return b.join('');
+}
+
+function renderVerbConjugation(item,tense){
+  const forms=getVerbForms(item,tense);
+  if(!forms) return '<div class="muted">Forms are not available yet.</div>';
+  return '<div class="conj-table">'+forms.map((f,i)=>
+    '<div class="conj-cell"><div class="conj-person">'+esc(VERB_PERSONS[i])+'</div><div class="conj-form">'+esc(f)+' <button class="speak" data-speak="'+esc(f)+'">🔊</button></div></div>'
+  ).join('')+'</div>';
+}
+
+function toggleConjugation(id){
+  const box=document.getElementById('conj-'+id);
+  if(!box) return;
+  box.classList.toggle('open');
+  if(box.classList.contains('open')) showVerbTense(id,'present');
+}
+
+function showVerbTense(id,tense){
+  const item=items.find(x=>x.id===id);
+  if(!item) return;
+  const box=document.getElementById('conj-'+id);
+  if(!box) return;
+  box.querySelectorAll('.tense-tab').forEach(b=>b.classList.toggle('active',b.dataset.tense===tense));
+  const body=box.querySelector('.conj-body');
+  body.innerHTML=renderVerbConjugation(item,tense);
+  bindSpeak();
+}
+
+function toggleVerbTest(id){
+  const box=document.getElementById('vtest-'+id);
+  if(!box) return;
+  box.classList.toggle('open');
+  if(box.classList.contains('open')) newVerbTest(id);
+}
+
+function newVerbTest(id){
+  const item=items.find(x=>x.id===id);
+  if(!item) return;
+  const box=document.getElementById('vtest-'+id);
+  const available=VERB_TENSES.filter(([k])=>getVerbForms(item,k));
+  const [tense,tenseLabel]=rand(available);
+  const forms=getVerbForms(item,tense);
+  const pi=Math.floor(Math.random()*VERB_PERSONS.length);
+  box.dataset.tense=tense;
+  box.dataset.person=String(pi);
+  box.querySelector('.verb-test-question').innerHTML=
+    '<b>'+esc(item.spanish)+'</b> · '+esc(tenseLabel)+' · <b>'+esc(VERB_PERSONS[pi])+'</b>';
+  box.querySelector('.verb-test-answer').value='';
+  box.querySelector('.test-feedback').textContent='';
+  setTimeout(()=>box.querySelector('.verb-test-answer').focus(),50);
+}
+
+function checkVerbTest(id){
+  const item=items.find(x=>x.id===id);
+  const box=document.getElementById('vtest-'+id);
+  if(!item||!box) return;
+  const tense=box.dataset.tense;
+  const pi=Number(box.dataset.person);
+  const forms=getVerbForms(item,tense);
+  const expected=forms[pi];
+  const input=box.querySelector('.verb-test-answer').value.trim();
+  const g=gradeAnswer(input,expected);
+  const fb=box.querySelector('.test-feedback');
+  if(g==='correct'){
+    fb.style.color='var(--green)';
+    fb.innerHTML='Correct ✅';
+  }else if(g==='almost'){
+    fb.style.color='var(--amber)';
+    fb.innerHTML='Almost · <b>'+esc(expected)+'</b>';
+  }else{
+    fb.style.color='var(--red)';
+    fb.innerHTML='Incorrect · <b>'+esc(expected)+'</b>';
+  }
+  speakSpanish(expected);
+}
+
+function showVerbTestAnswer(id){
+  const item=items.find(x=>x.id===id);
+  const box=document.getElementById('vtest-'+id);
+  if(!item||!box) return;
+  const forms=getVerbForms(item,box.dataset.tense);
+  const expected=forms[Number(box.dataset.person)];
+  box.querySelector('.test-feedback').style.color='var(--text)';
+  box.querySelector('.test-feedback').innerHTML='Answer: <b>'+esc(expected)+'</b>';
+  speakSpanish(expected);
+}
+
+function startRandomVerbTest(){
+  const list=filteredVerbs();
+  if(!list.length) return;
+  const item=rand(list);
+  const card=document.getElementById('verb-'+item.id);
+  if(card) card.scrollIntoView({behavior:'smooth',block:'center'});
+  const box=document.getElementById('vtest-'+item.id);
+  if(box && !box.classList.contains('open')) box.classList.add('open');
+  newVerbTest(item.id);
+}
+
+function openCheatsheet(){
+  $('cheatModal').classList.add('open');
+}
+function closeCheatsheet(){
+  $('cheatModal').classList.remove('open');
+}
+
+function filteredVerbs(){
+  const q=norm($('verbSearch')?.value||'');
+  const type=$('verbTypeFilter')?.value||'all';
+  return items.filter(x=>x.item_type==='verb')
+    .filter(x=>!q || norm((x.spanish||'')+' '+(x.english||'')).includes(q))
+    .filter(x=>{
+      const m=verbMeta(x);
+      if(type==='regular') return m.regular;
+      if(type==='irregular') return m.irregular || m.stem;
+      if(type==='reflexive') return m.reflexive;
+      return true;
+    });
+}
+
 function renderVerbs(){
+  const a=filteredVerbs();
 
-  const a=
-    items.filter(
-      x=>x.item_type==='verb'
-    );
+  $('verbsList').innerHTML=a.map(x=>{
+    const m=verbMeta(x);
+    const note=m.irregular
+      ?'Learn the pattern, not only the ending.'
+      :m.reflexive
+      ?'Regular pattern + reflexive pronoun.'
+      :'Uses the standard ending pattern.';
 
-
-  $('verbsList').innerHTML=
-    a.map(x=>{
-
-      const c=
-        x.conjugation || {};
-
-
-      const keys=
-        Object.keys(c);
-
-
-      return `
-
-      <div class="item">
-
-        <b>${esc(x.spanish)}</b>
-
-        <button
-          class="speak"
-          data-speak="${esc(x.spanish)}"
-        >
-          🔊
-        </button>
-
-        <div>
-          ${esc(x.english||'')}
+    return `
+      <div class="item verb-card" id="verb-${x.id}">
+        <div class="verb-head">
+          <div>
+            <div class="verb-title">${esc(x.spanish)}
+              <button class="speak" data-speak="${esc(x.spanish)}">🔊</button>
+            </div>
+            <div>${esc(x.english||'')}</div>
+            <div class="badges">${verbBadges(x)}</div>
+            <div class="muted small">${esc(note)}${x.notes?' · '+esc(x.notes):''}</div>
+          </div>
         </div>
 
-        <div class="muted small">
-          ${esc(x.notes||'')}
+        <div class="verb-actions">
+          <button class="primary" onclick="toggleVerbTest('${x.id}')">🎯 Test me</button>
+          <button onclick="toggleConjugation('${x.id}')">Show conjugation</button>
+          <button onclick="openCheatsheet()">⚡ Cheatsheet</button>
         </div>
 
+        <div class="verb-test" id="vtest-${x.id}">
+          <div class="verb-test-question" style="margin-bottom:9px"></div>
+          <div class="verb-test-row">
+            <input class="verb-test-answer" placeholder="Type the conjugated form…" onkeydown="if(event.key==='Enter')checkVerbTest('${x.id}')">
+            <button class="primary" onclick="checkVerbTest('${x.id}')">Check answer</button>
+          </div>
+          <div class="verb-actions">
+            <button onclick="showVerbTestAnswer('${x.id}')">Show answer</button>
+            <button onclick="newVerbTest('${x.id}')">Another one</button>
+          </div>
+          <div class="test-feedback"></div>
+        </div>
 
-        ${
-          keys.length
-
-          ?
-
-          `<div class="verbgrid">
-
-            ${
-              keys.map(k=>`
-
-                <div>
-
-                  <span class="small muted">
-                    ${esc(k)}
-                  </span>
-
-                  <br>
-
-                  <b>
-                    ${esc(c[k])}
-                  </b>
-
-                  <button
-                    class="speak"
-                    data-speak="${esc(c[k])}"
-                  >
-                    🔊
-                  </button>
-
-                </div>
-
-              `).join('')
-            }
-
-          </div>`
-
-          :
-
-          ''
-        }
-
+        <div class="conj-wrap" id="conj-${x.id}">
+          <div class="tense-tabs">
+            ${VERB_TENSES.map(([k,label])=>'<button class="tense-tab '+(k==='present'?'active':'')+'" data-tense="'+k+'" onclick="showVerbTense(\''+x.id+'\',\''+k+'\')">'+label+'</button>').join('')}
+          </div>
+          <div class="conj-body">${renderVerbConjugation(x,'present')}</div>
+        </div>
       </div>
-
-      `;
-
-    }).join('');
-
+    `;
+  }).join('');
 
   bindSpeak();
-
 }
 
 
