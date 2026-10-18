@@ -267,6 +267,10 @@ button.active{
 .conj-cell{background:#f5f7fa;padding:9px;border-radius:9px}
 .conj-person{font-size:12px;color:var(--muted);margin-bottom:3px}
 .conj-form{font-weight:800}
+.verb-examples{display:none;margin-top:14px;padding:14px;border-radius:12px;background:#fffdf7;border:1px solid #eadfbe}
+.verb-examples.open{display:block}
+.verb-example{padding:8px 0;border-bottom:1px solid #eee7d5;line-height:1.45}
+.verb-example:last-child{border-bottom:0}
 .verb-test{display:none;margin-top:14px;padding:14px;border-radius:12px;background:#f8fbff;border:1px solid #dbe7fb}
 .verb-test.open{display:block}
 .verb-test-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -2025,6 +2029,62 @@ function closeCheatsheet(){
   $('cheatModal').classList.remove('open');
 }
 
+
+function verbUsageExamples(item){
+  const key=norm(item.spanish||'');
+  if(EXAMPLES[key]) return EXAMPLES[key];
+
+  const custom={
+    'acordarse de':['Me acordé de tu mensaje esta mañana.','¿Te acordás de dónde dejamos el auto?'],
+    'acostarse':['Me acuesto cerca de las once.','Ayer me acosté muy tarde.'],
+    'afeitarse':['Me afeito antes de ir al trabajo.','Hoy no tuve tiempo de afeitarme.'],
+    'andar':['Ando mucho por el centro durante la semana.','Este reloj ya no anda.'],
+    'ascender':['Lo ascendieron a gerente el año pasado.','El avión empezó a ascender después del despegue.'],
+    'bañarse':['Los chicos quieren bañarse en la pileta.','Me bañé antes de salir.'],
+    'comer':['Comemos juntos los domingos.','Ayer comí demasiado.'],
+    'competir':['Nuestra empresa compite con varias cadenas grandes.','Los atletas van a competir mañana.'],
+    'concluir':['La reunión concluyó a las seis.','Podemos concluir que la idea funcionó.'],
+    'convertirse':['La idea se convirtió en un proyecto real.','Con los años se convirtió en un experto.'],
+    'deber':['Debés descansar un poco más.','Debo llamar al banco mañana.'],
+    'decir':['Decime la verdad.','Ayer me dijo que llegaría tarde.'],
+    'derribar':['La tormenta derribó varios árboles.','Tuvieron que derribar una pared para ampliar el local.'],
+    'despedir':['La empresa decidió despedir a dos empleados.','Fuimos al aeropuerto a despedir a nuestros amigos.'],
+    'despedirse de alguien':['Antes de irme, fui a despedirme de mis amigos.','No me gusta despedirme por mensaje.'],
+    'despertarse':['Me desperté a las seis de la mañana.','El bebé suele despertarse varias veces de noche.'],
+    'distraerse':['Me distraigo cuando hay mucho ruido.','Los chicos se distrajeron con el teléfono.'],
+    'dormirse':['El bebé se durmió enseguida.','Anoche me costó dormirme.'],
+    'ducharse':['Me ducho antes de ir al trabajo.','Después del gimnasio fui a ducharme.'],
+    'elegir':['Tenés que elegir una de las dos opciones.','Elegimos un hotel cerca del centro.'],
+    'ir':['Voy al trabajo en auto.','Ayer fui al centro.'],
+    'lavarse los dientes':['Los chicos se lavan los dientes antes de dormir.','No te olvides de lavarte los dientes.'],
+    'peinarse':['Se peinó antes de salir.','Mi hijo no quiere peinarse.'],
+    'pedir':['Voy a pedir una pizza.','Ayer pedí un café y una medialuna.'],
+    'querer':['Quiero aprender a hablar con más fluidez.','¿Querés tomar un café?'],
+    'seguir':['Quiero seguir estudiando español.','Seguimos caminando hasta la plaza.'],
+    'soler':['Suelo desayunar a las ocho.','Antes solía viajar más seguido.'],
+    'venir':['¿Querés venir a cenar mañana?','Mis padres vinieron el domingo.'],
+    'vivir':['Vivo en Buenos Aires.','Antes vivíamos más lejos del centro.']
+  };
+  if(custom[key]) return custom[key];
+
+  const p=verbParts(item.spanish);
+  if(p.reflexive){
+    return [
+      'Me gusta usar este verbo en conversaciones cotidianas.',
+      'Ayer lo usé hablando de mi rutina.'
+    ];
+  }
+  return [
+    'Uso este verbo con frecuencia en conversaciones cotidianas.',
+    'Ayer lo usé para contar lo que pasó.'
+  ];
+}
+
+function toggleVerbExamples(id){
+  const box=document.getElementById('vexamples-'+id);
+  if(box) box.classList.toggle('open');
+}
+
 function filteredVerbs(){
   const q=norm($('verbSearch')?.value||'');
   const type=$('verbTypeFilter')?.value||'all';
@@ -2066,7 +2126,13 @@ function renderVerbs(){
         <div class="verb-actions">
           <button class="primary" onclick="toggleVerbTest('${x.id}')">🎯 Test me</button>
           <button onclick="toggleConjugation('${x.id}')">Show conjugation</button>
+          <button onclick="toggleVerbExamples('${x.id}')">💬 Examples</button>
           <button onclick="openCheatsheet()">⚡ Cheatsheet</button>
+        </div>
+
+        <div class="verb-examples" id="vexamples-${x.id}">
+          <div style="font-weight:800;margin-bottom:5px">Real usage examples</div>
+          ${verbUsageExamples(x).map((s,i)=>'<div class="verb-example"><b>'+(i+1)+'.</b> '+esc(s)+' <button class="speak" data-speak="'+esc(s)+'">🔊</button></div>').join('')}
         </div>
 
         <div class="verb-test" id="vtest-${x.id}">
