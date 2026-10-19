@@ -236,6 +236,13 @@ button.active{
 }
 
 .lesson{margin-bottom:12px}
+.lesson-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.lesson.archived{opacity:.62}
+.lesson-test{display:none;margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:12px;background:#f9fbff}
+.lesson-test.open{display:block}
+.lesson-test .choice{margin:7px 0}
+.lesson-test-result{margin-top:10px;font-weight:700}
+.lesson-topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
 .story-page{max-width:900px;margin:0 auto}
 .story-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}
 .story-text{font-size:18px;line-height:1.75}
@@ -759,7 +766,13 @@ button.active{
 
 <section id="lessons" class="panel">
 
-<h2>Lessons</h2>
+<div class="lesson-topbar">
+  <div>
+    <h2 style="margin-bottom:4px">Lessons</h2>
+    <div class="muted">Each lesson has its own quiz. Archive the lessons you already know.</div>
+  </div>
+  <label class="small"><input type="checkbox" id="showArchivedLessons" onchange="renderLessons()"> Show archived</label>
+</div>
 
 <div id="lessonsList"></div>
 
@@ -2393,39 +2406,182 @@ function renderVerbs(){
 
 
 
+
+const LESSON_TERMS={
+  'Work and everyday life':['gerente','empleados','salario','dueño','inquilino','alquilar','despedir','despedirse de alguien','fábrica','manejar','de todo un poco','alguna vez','cada tanto'],
+  'Home and daily routine':['levantarse','despertarse','ducharse','bañarse','lavarse los dientes','peinarse','afeitarse','dormirse','calefactor','sistema de calefacción','aislamiento'],
+  'Aviation and travel':['despegar','aterrizar','acuatizar','flota de aviones','licencia','escala','autopista','venir','mudarse'],
+  'Food and products':['clara','yema','cáscara','ahumado','marinado','cocinado','merendar','merienda','mermelada'],
+  'People, relationships and events':['casamiento','boda','invitar a','me invitó al partido','viudo / viuda','quedarse embarazada','sin casarse','cita','turno'],
+  'City, technical work and public works':['técnico / técnica','ingeniero / ingeniera','obra pública','construir','dibujar','diseñar','tormenta','ruido'],
+  'Stories and conversation':['contar','chiste','anécdota','historia','aventura','a menudo','por las dudas'],
+  'Recent lesson: reflexives, meetings and everyday vocabulary':['acostumbrarse a','caerse','enojarse','alegrarse','romperse un hueso','tratarse de','encender / prender','apagar','prender fuego','charlar','reunión','todavía no','extrañar','esperar','imaginar'],
+  'Acostumbrarse, acordarse and olvidarse':['acostumbrarse a','acordarse de','olvidar'],
+  'Deber and tener que':['deber','tener que + infinitivo'],
+  'Desde / desde que / hace… que':['desde','desde que','hace ... años que'],
+  'Prepositions: a / al / de / del':['acostumbrarse a','acordarse de','desde','desde que'],
+  'Reflexive verbs':['levantarse','despertarse','ducharse','bañarse','lavarse los dientes','peinarse','afeitarse','dormirse','mudarse','acostarse'],
+  'Soler + infinitive':['soler'],
+  'Direct object pronouns':['lo / la / los / las']
+};
+
+const LESSON_GRAMMAR={
+  'Pretérito Perfecto Simple (Indefinido)':[
+    {q:'Choose the correct completed past form: “Yesterday I went home.”',opts:['Ayer fui a casa.','Ayer iba a casa.','Ayer voy a casa.','Ayer iré a casa.'],a:0},
+    {q:'Choose the correct form of decir for yo in Indefinido.',opts:['decía','dije','digo','diré'],a:1},
+    {q:'Choose the correct form of venir for ellos in Indefinido.',opts:['venían','vienen','vinieron','vendrán'],a:2}
+  ],
+  'Pretérito Imperfecto':[
+    {q:'Choose the best sentence for a repeated past habit.',opts:['De chico jugaba afuera todos los días.','Ayer jugué afuera una vez.','Mañana jugaré afuera.','Juego afuera ahora.'],a:0},
+    {q:'Choose the correct Imperfecto form of ser for nosotros.',opts:['fuimos','somos','éramos','seremos'],a:2},
+    {q:'Choose the correct Imperfecto form of ir for yo.',opts:['fui','iba','voy','iré'],a:1}
+  ],
+  'Indefinido vs Imperfecto':[
+    {q:'Complete: “Mientras yo ___, sonó el teléfono.”',opts:['cocinaba','cociné','cocino','cocinaré'],a:0},
+    {q:'Complete: “Ayer ___ el informe y lo envié.”',opts:['terminaba','terminé','termino','terminaré'],a:1},
+    {q:'Which tense normally gives background or an ongoing situation in the past?',opts:['Presente','Indefinido','Imperfecto','Futuro'],a:2}
+  ],
+  'Soler + infinitive':[
+    {q:'Choose the correct present form with vos.',opts:['solés viajar','sueles viajando','solías viajar','soliste viajar'],a:0},
+    {q:'Choose the correct Imperfecto sentence.',opts:['Suelo viajar mucho antes.','Solía viajar mucho antes.','Solé viajar mucho antes.','Fui viajar mucho antes.'],a:1},
+    {q:'Soler is followed by…',opts:['a noun only','gerund','infinitive','subjunctive only'],a:2}
+  ],
+  'Direct object pronouns':[
+    {q:'Replace “el libro”: “Compré el libro.”',opts:['Lo compré.','Le compré.','La compré.','Se compré.'],a:0},
+    {q:'Replace “las entradas”: “Tengo las entradas.”',opts:['Los tengo.','Las tengo.','Les tengo.','Se tengo.'],a:1},
+    {q:'Which pronoun replaces a masculine plural direct object?',opts:['la','le','los','les'],a:2}
+  ],
+  'Régimen preposicional':[
+    {q:'Choose the correct preposition: acostumbrarse ___ algo.',opts:['a','con','de','en'],a:0},
+    {q:'Choose the correct preposition: soñar ___ algo.',opts:['a','con','de','en'],a:1},
+    {q:'Choose the correct preposition: confiar ___ alguien.',opts:['a','con','de','en'],a:3},
+    {q:'Choose the correct preposition: fiarse ___ alguien.',opts:['a','con','de','en'],a:2}
+  ]
+};
+
+let lessonQuizState={};
+
+function lessonVocabularyPool(title){
+  const terms=LESSON_TERMS[title]||[];
+  return items.filter(x=>terms.includes(x.spanish));
+}
+
+function buildLessonQuestions(lesson){
+  if(LESSON_GRAMMAR[lesson.title]) return LESSON_GRAMMAR[lesson.title].map(x=>({...x}));
+
+  const pool=lessonVocabularyPool(lesson.title);
+  if(pool.length){
+    return pool.sort(()=>Math.random()-.5).slice(0,5).map(it=>{
+      const distract=items
+        .filter(x=>x.id!==it.id && x.spanish && x.english && ['word','expression','verb'].includes(x.item_type))
+        .sort(()=>Math.random()-.5).slice(0,3).map(x=>x.spanish);
+      const opts=[it.spanish,...distract].sort(()=>Math.random()-.5);
+      return {q:'Choose the Spanish for: “'+(it.english||it.russian||'')+'”',opts,a:opts.indexOf(it.spanish)};
+    });
+  }
+
+  return [
+    {q:'Which lesson are you testing?',opts:[lesson.title,'Aviation and travel','Food and products','Stories and conversation'],a:0}
+  ];
+}
+
+function openLessonTest(id){
+  const lesson=lessons.find(x=>x.id===id);
+  if(!lesson) return;
+  const box=document.getElementById('ltest-'+id);
+  if(!box) return;
+  box.classList.toggle('open');
+  if(box.classList.contains('open')) startLessonQuiz(id);
+}
+
+function startLessonQuiz(id){
+  const lesson=lessons.find(x=>x.id===id);
+  const box=document.getElementById('ltest-'+id);
+  if(!lesson||!box) return;
+  lessonQuizState[id]={questions:buildLessonQuestions(lesson),i:0,score:0,answered:false};
+  renderLessonQuestion(id);
+}
+
+function renderLessonQuestion(id){
+  const st=lessonQuizState[id];
+  const box=document.getElementById('ltest-'+id);
+  if(!st||!box) return;
+  const q=st.questions[st.i];
+  if(!q){
+    box.innerHTML='<h3>Quiz complete</h3><p>Score: <b>'+st.score+' / '+st.questions.length+'</b></p><button onclick="startLessonQuiz(\''+id+'\')">Try again</button>';
+    return;
+  }
+  box.innerHTML=
+    '<div class="small muted">Question '+(st.i+1)+' / '+st.questions.length+'</div>'+
+    '<div style="font-weight:800;font-size:18px;margin:8px 0">'+esc(q.q)+'</div>'+
+    q.opts.map((o,idx)=>'<button class="choice" onclick="answerLessonQuestion(\''+id+'\','+idx+',this)">'+esc(o)+'</button>').join('')+
+    '<div class="lesson-test-result"></div>';
+}
+
+function answerLessonQuestion(id,idx,btn){
+  const st=lessonQuizState[id];
+  const box=document.getElementById('ltest-'+id);
+  if(!st||st.answered) return;
+  st.answered=true;
+  const q=st.questions[st.i];
+  const buttons=[...box.querySelectorAll('.choice')];
+  buttons.forEach((b,i)=>{
+    if(i===q.a) b.classList.add('correct-choice');
+    else if(i===idx) b.classList.add('wrong-choice');
+    b.disabled=true;
+  });
+  const r=box.querySelector('.lesson-test-result');
+  if(idx===q.a){ st.score++; r.textContent='Correct ✅'; r.style.color='var(--green)';}
+  else {r.innerHTML='Incorrect. Answer: <b>'+esc(q.opts[q.a])+'</b>'; r.style.color='var(--red)';}
+  const next=document.createElement('button');
+  next.className='primary';
+  next.style.marginTop='10px';
+  next.textContent=st.i===st.questions.length-1?'Show result':'Next';
+  next.onclick=()=>{st.i++;st.answered=false;renderLessonQuestion(id);};
+  r.appendChild(document.createElement('br'));
+  r.appendChild(next);
+}
+
+async function setLessonArchived(id,archived){
+  try{
+    await api('/rest/v1/lessons?id=eq.'+encodeURIComponent(id),{
+      method:'PATCH',
+      headers:{'Prefer':'return=minimal'},
+      body:JSON.stringify({archived,archived_at:archived?new Date().toISOString():null})
+    });
+    const l=lessons.find(x=>x.id===id);
+    if(l){l.archived=archived;l.archived_at=archived?new Date().toISOString():null;}
+    renderLessons();
+  }catch(e){alert(e.message);}
+}
+
 function renderLessons(){
+  const showArchived=$('showArchivedLessons')?.checked;
+  const visible=lessons.filter(x=>showArchived || !x.archived);
 
-  $('lessonsList').innerHTML=
-
-    lessons.map(
-      (x,i)=>`
-
-      <div class="card lesson">
-
-        <h3>
-          ${i+1}. ${esc(x.title)}
-        </h3>
-
-        <p>
-          ${esc(x.summary||'')}
-        </p>
+  $('lessonsList').innerHTML=visible.map((x,i)=>`
+      <div class="card lesson ${x.archived?'archived':''}">
+        <div class="top">
+          <div>
+            <h3>${i+1}. ${esc(x.title)}</h3>
+            <p>${esc(x.summary||'')}</p>
+          </div>
+          ${x.archived?'<span class="badge">Archived</span>':''}
+        </div>
 
         <details>
-
-          <summary>
-            Lesson notes
-          </summary>
-
-          <p>
-            ${esc(x.source_notes||'')}
-          </p>
-
+          <summary>Lesson notes</summary>
+          <p style="white-space:pre-line">${esc(x.source_notes||'')}</p>
         </details>
 
+        <div class="lesson-actions">
+          <button class="primary" onclick="openLessonTest('${x.id}')">🎯 Test this lesson</button>
+          <button onclick="setLessonArchived('${x.id}',${x.archived?'false':'true'})">${x.archived?'↩ Restore':'📦 Archive'}</button>
+        </div>
+
+        <div class="lesson-test" id="ltest-${x.id}"></div>
       </div>
-
-    `).join('');
-
+    `).join('') || '<div class="card"><p>No lessons to show.</p></div>';
 }
 
 
