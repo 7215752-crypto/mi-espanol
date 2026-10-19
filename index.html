@@ -2466,23 +2466,131 @@ function lessonVocabularyPool(title){
   return items.filter(x=>terms.includes(x.spanish));
 }
 
-function buildLessonQuestions(lesson){
-  if(LESSON_GRAMMAR[lesson.title]) return LESSON_GRAMMAR[lesson.title].map(x=>({...x}));
+function makeChoiceQuestion(prompt,correct,distractors,explain=''){
+  const opts=[correct,...distractors.filter(x=>x&&x!==correct).slice(0,3)].sort(()=>Math.random()-.5);
+  return {type:'choice',q:prompt,opts,a:opts.indexOf(correct),explain};
+}
 
-  const pool=lessonVocabularyPool(lesson.title);
-  if(pool.length){
-    return pool.sort(()=>Math.random()-.5).slice(0,5).map(it=>{
-      const distract=items
-        .filter(x=>x.id!==it.id && x.spanish && x.english && ['word','expression','verb'].includes(x.item_type))
-        .sort(()=>Math.random()-.5).slice(0,3).map(x=>x.spanish);
-      const opts=[it.spanish,...distract].sort(()=>Math.random()-.5);
-      return {q:'Choose the Spanish for: “'+(it.english||it.russian||'')+'”',opts,a:opts.indexOf(it.spanish)};
+function buildLessonQuestions(lesson){
+  const qs=[];
+  const grammar=(LESSON_GRAMMAR[lesson.title]||[]).map(x=>({
+    type:'choice',
+    q:x.q,
+    opts:x.opts,
+    a:x.a,
+    explain:x.explain||''
+  }));
+
+  // Start with topic-specific grammar/context questions.
+  qs.push(...grammar);
+
+  const pool=lessonVocabularyPool(lesson.title).sort(()=>Math.random()-.5);
+
+  // Deeper vocabulary: active recall + reverse recognition.
+  pool.slice(0,4).forEach(it=>{
+    qs.push({
+      type:'input',
+      q:'Translate into Spanish: “'+(it.english||it.russian||'')+'”',
+      expected:it.spanish,
+      explain:'Target expression: '+it.spanish
     });
+
+    const meanings=items
+      .filter(x=>x.id!==it.id && x.english && ['word','expression','verb'].includes(x.item_type))
+      .sort(()=>Math.random()-.5).slice(0,3).map(x=>x.english);
+
+    qs.push(makeChoiceQuestion(
+      'What does “'+it.spanish+'” mean here?',
+      it.english||it.russian||'',
+      meanings,
+      'Meaning: '+(it.english||it.russian||'')
+    ));
+  });
+
+  // Verb lessons also test conjugation in the three tenses currently studied.
+  const verbs=pool.filter(x=>x.item_type==='verb' || getVerbForms(x,'present'));
+  verbs.slice(0,3).forEach(v=>{
+    const available=VERB_TENSES.filter(([k])=>getVerbForms(v,k));
+    if(!available.length) return;
+    const [tense,tenseLabel]=rand(available);
+    const forms=getVerbForms(v,tense);
+    const pi=Math.floor(Math.random()*VERB_PERSONS.length);
+    qs.push({
+      type:'input',
+      q:'Conjugate “'+v.spanish+'” · '+tenseLabel+' · '+VERB_PERSONS[pi],
+      expected:forms[pi],
+      explain:'Correct form: '+forms[pi]
+    });
+  });
+
+  // Special deeper sets for core grammar lessons.
+  const extras={
+    'Pretérito Perfecto Simple (Indefinido)':[
+      {type:'input',q:'Write in Spanish: “Yesterday I came late.”',expected:'Ayer vine tarde.',explain:'A completed event yesterday → Indefinido: vine.'},
+      {type:'input',q:'Conjugate “querer” · Indefinido · yo',expected:'quise',explain:'querer → quis- in Indefinido.'},
+      makeChoiceQuestion('Which sentence describes one completed event?','El sábado trabajé hasta las diez.',['Cuando era joven, trabajaba mucho.','Trabajo hasta las diez.','Trabajaba cuando llamaste.'],'A single completed Saturday event uses Indefinido.')
+    ],
+    'Pretérito Imperfecto':[
+      {type:'input',q:'Write in Spanish: “When I was a child, I lived near the river.”',expected:'Cuando era chico, vivía cerca del río.',explain:'Background/habitual past uses Imperfecto: era, vivía.'},
+      {type:'input',q:'Conjugate “hablar” · Imperfecto · nosotros',expected:'hablábamos',explain:'-AR imperfecto: hablábamos.'},
+      makeChoiceQuestion('Which sentence gives background rather than a completed event?','Hacía frío y llovía.',['Ayer empezó a llover.','Llegué a las ocho.','Compré un paraguas.'],'Weather/background is typically Imperfecto.')
+    ],
+    'Indefinido vs Imperfecto':[
+      makeChoiceQuestion('Complete naturally: “Mientras ___, alguien llamó a la puerta.”','cenábamos',['cenamos','cenaremos','cenamos ayer'],'Mientras introduces an ongoing background action → Imperfecto.'),
+      makeChoiceQuestion('Complete naturally: “De repente, el motor ___.”','se apagó',['se apagaba','se apaga','se apagará'],'A sudden completed event advances the story → Indefinido.'),
+      {type:'input',q:'Write in Spanish: “I was driving when the phone rang.”',expected:'Manejaba cuando sonó el teléfono.',explain:'Ongoing background = manejaba; interrupting event = sonó.'}
+    ],
+    'Régimen preposicional':[
+      {type:'input',q:'Complete with the full expression: “Me cuesta ___ los horarios nuevos.” (to get used to)',expected:'acostumbrarme a',explain:'acostumbrarse always takes a.'},
+      makeChoiceQuestion('Complete: “Sueño ___ viajar por Sudamérica.”','con',['a','de','en'],'soñar con + noun/infinitive idea.'),
+      makeChoiceQuestion('Complete: “No me fío ___ esa persona.”','de',['a','con','en'],'fiarse de alguien/algo.'),
+      makeChoiceQuestion('Complete: “Confío ___ vos.”','en',['a','con','de'],'confiar en alguien/algo.'),
+      {type:'input',q:'Translate into Spanish: “I am thinking about the trip.”',expected:'Estoy pensando en el viaje.',explain:'pensar en = to think about.'}
+    ],
+    'Reflexive verbs':[
+      {type:'input',q:'Write in Spanish using vos: “You get up early.”',expected:'Te levantás temprano.',explain:'vos + reflexive: te levantás.'},
+      {type:'input',q:'Write in Spanish: “I fell asleep late.”',expected:'Me dormí tarde.',explain:'dormirse in Indefinido: me dormí.'}
+    ],
+    'Soler + infinitive':[
+      {type:'input',q:'Write in Spanish: “I usually have breakfast at eight.”',expected:'Suelo desayunar a las ocho.',explain:'soler + infinitive.'},
+      {type:'input',q:'Write in Spanish: “I used to travel a lot.”',expected:'Solía viajar mucho.',explain:'Habit in the past: solía + infinitive.'}
+    ],
+    'Desde / desde que / hace… que':[
+      makeChoiceQuestion('Complete: “Vivo acá ___ 2024.”','desde',['desde que','hace','durante'],'desde + starting point/date.'),
+      makeChoiceQuestion('Complete: “No lo veo ___ se mudó.”','desde que',['desde','hace','por'],'desde que + conjugated verb.'),
+      {type:'input',q:'Write in Spanish: “I have lived here for three years.”',expected:'Hace tres años que vivo acá.',explain:'hace + period + que + present.'}
+    ],
+    'Deber and tener que':[
+      makeChoiceQuestion('Which sounds like a practical obligation?','Tengo que ir al banco.',['Debo de ir al banco.','Iré al banco ayer.','Solía ir al banco ahora.'],'tener que + infinitive expresses necessity/obligation.'),
+      {type:'input',q:'Write in Spanish: “You should rest.” using vos',expected:'Debés descansar.',explain:'deber can express advice; vos: debés.'}
+    ]
+  };
+
+  if(extras[lesson.title]) qs.push(...extras[lesson.title]);
+
+  // Guarantee a substantial test without padding with duplicates.
+  const unique=[];
+  const seen=new Set();
+  for(const q of qs){
+    const key=q.q;
+    if(!seen.has(key)){seen.add(key);unique.push(q);}
   }
 
-  return [
-    {q:'Which lesson are you testing?',opts:[lesson.title,'Aviation and travel','Food and products','Stories and conversation'],a:0}
-  ];
+  // Aim for 10 questions; if the lesson has enough vocabulary, create more active recall.
+  let idx=4;
+  while(unique.length<10 && pool.length){
+    const it=pool[idx%pool.length];
+    unique.push({
+      type:'input',
+      q:'Use active recall. Write the Spanish expression for: “'+(it.english||it.russian||'')+'”',
+      expected:it.spanish,
+      explain:'Answer: '+it.spanish
+    });
+    idx++;
+    if(idx>pool.length+12) break;
+  }
+
+  return unique.slice(0,10);
 }
 
 function openLessonTest(id){
@@ -2502,20 +2610,61 @@ function startLessonQuiz(id){
   renderLessonQuestion(id);
 }
 
+function lessonResultHtml(id,st){
+  const pct=st.questions.length?Math.round(st.score/st.questions.length*100):0;
+  const level=pct>=90?'Strong — you can probably archive this lesson.':pct>=70?'Good, but review the mistakes once more.':'Needs review before archiving.';
+  return '<h3>Quiz complete</h3>'+
+    '<p>Score: <b>'+st.score+' / '+st.questions.length+' ('+pct+'%)</b></p>'+
+    '<p>'+esc(level)+'</p>'+
+    '<div class="lesson-actions">'+
+      '<button onclick="startLessonQuiz(\''+id+'\')">Try another version</button>'+
+      (pct>=90?'<button class="primary" onclick="setLessonArchived(\''+id+'\',true)">📦 Archive lesson</button>':'')+
+    '</div>';
+}
+
 function renderLessonQuestion(id){
   const st=lessonQuizState[id];
   const box=document.getElementById('ltest-'+id);
   if(!st||!box) return;
   const q=st.questions[st.i];
   if(!q){
-    box.innerHTML='<h3>Quiz complete</h3><p>Score: <b>'+st.score+' / '+st.questions.length+'</b></p><button onclick="startLessonQuiz(\''+id+'\')">Try again</button>';
+    box.innerHTML=lessonResultHtml(id,st);
     return;
   }
+
+  let controls='';
+  if(q.type==='input'){
+    controls=
+      '<input class="lesson-input" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;margin:8px 0" '+
+      'placeholder="Type your answer in Spanish…" autocomplete="off" spellcheck="false" '+
+      'onkeydown="if(event.key===\'Enter\')answerLessonInput(\''+id+'\')">'+
+      '<div class="lesson-actions">'+
+        '<button class="primary" onclick="answerLessonInput(\''+id+'\')">Check answer</button>'+
+        '<button onclick="showLessonAnswer(\''+id+'\')">Show answer</button>'+
+      '</div>';
+  }else{
+    controls=q.opts.map((o,idx)=>
+      '<button class="choice" onclick="answerLessonQuestion(\''+id+'\','+idx+',this)">'+esc(o)+'</button>'
+    ).join('');
+  }
+
   box.innerHTML=
-    '<div class="small muted">Question '+(st.i+1)+' / '+st.questions.length+'</div>'+
+    '<div class="small muted">Question '+(st.i+1)+' / '+st.questions.length+' · '+(q.type==='input'?'Active recall':'Context / grammar')+'</div>'+
     '<div style="font-weight:800;font-size:18px;margin:8px 0">'+esc(q.q)+'</div>'+
-    q.opts.map((o,idx)=>'<button class="choice" onclick="answerLessonQuestion(\''+id+'\','+idx+',this)">'+esc(o)+'</button>').join('')+
+    controls+
     '<div class="lesson-test-result"></div>';
+
+  if(q.type==='input') setTimeout(()=>box.querySelector('.lesson-input')?.focus(),50);
+}
+
+function appendLessonNext(id,r,st){
+  const next=document.createElement('button');
+  next.className='primary';
+  next.style.marginTop='10px';
+  next.textContent=st.i===st.questions.length-1?'Show result':'Next';
+  next.onclick=()=>{st.i++;st.answered=false;renderLessonQuestion(id);};
+  r.appendChild(document.createElement('br'));
+  r.appendChild(next);
 }
 
 function answerLessonQuestion(id,idx,btn){
@@ -2531,15 +2680,55 @@ function answerLessonQuestion(id,idx,btn){
     b.disabled=true;
   });
   const r=box.querySelector('.lesson-test-result');
-  if(idx===q.a){ st.score++; r.textContent='Correct ✅'; r.style.color='var(--green)';}
-  else {r.innerHTML='Incorrect. Answer: <b>'+esc(q.opts[q.a])+'</b>'; r.style.color='var(--red)';}
-  const next=document.createElement('button');
-  next.className='primary';
-  next.style.marginTop='10px';
-  next.textContent=st.i===st.questions.length-1?'Show result':'Next';
-  next.onclick=()=>{st.i++;st.answered=false;renderLessonQuestion(id);};
-  r.appendChild(document.createElement('br'));
-  r.appendChild(next);
+  if(idx===q.a){
+    st.score++;
+    r.innerHTML='Correct ✅'+(q.explain?'<div class="small muted">'+esc(q.explain)+'</div>':'');
+    r.style.color='var(--green)';
+  }else{
+    r.innerHTML='Incorrect. Answer: <b>'+esc(q.opts[q.a])+'</b>'+(q.explain?'<div class="small muted">'+esc(q.explain)+'</div>':'');
+    r.style.color='var(--red)';
+  }
+  appendLessonNext(id,r,st);
+}
+
+function answerLessonInput(id){
+  const st=lessonQuizState[id];
+  const box=document.getElementById('ltest-'+id);
+  if(!st||st.answered) return;
+  const q=st.questions[st.i];
+  const input=box.querySelector('.lesson-input');
+  const ans=input.value.trim();
+  if(!ans) return;
+  st.answered=true;
+  input.disabled=true;
+  const g=gradeAnswer(ans,q.expected);
+  const r=box.querySelector('.lesson-test-result');
+  if(g==='correct'){
+    st.score++;
+    r.innerHTML='Correct ✅'+(q.explain?'<div class="small muted">'+esc(q.explain)+'</div>':'');
+    r.style.color='var(--green)';
+  }else if(g==='almost'){
+    r.innerHTML='Almost. Answer: <b>'+esc(q.expected)+'</b>'+(q.explain?'<div class="small muted">'+esc(q.explain)+'</div>':'');
+    r.style.color='var(--amber)';
+  }else{
+    r.innerHTML='Incorrect. Answer: <b>'+esc(q.expected)+'</b>'+(q.explain?'<div class="small muted">'+esc(q.explain)+'</div>':'');
+    r.style.color='var(--red)';
+  }
+  appendLessonNext(id,r,st);
+}
+
+function showLessonAnswer(id){
+  const st=lessonQuizState[id];
+  const box=document.getElementById('ltest-'+id);
+  if(!st||st.answered) return;
+  const q=st.questions[st.i];
+  st.answered=true;
+  const input=box.querySelector('.lesson-input');
+  if(input) input.disabled=true;
+  const r=box.querySelector('.lesson-test-result');
+  r.innerHTML='Answer: <b>'+esc(q.expected)+'</b>'+(q.explain?'<div class="small muted">'+esc(q.explain)+'</div>':'');
+  r.style.color='var(--text)';
+  appendLessonNext(id,r,st);
 }
 
 async function setLessonArchived(id,archived){
