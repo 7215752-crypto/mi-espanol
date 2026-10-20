@@ -2945,18 +2945,53 @@ const STORY_WORDS={
     quedar:'to remain',vacía:'empty',encenderse:'to turn on / light up',fantasmas:'ghosts'
   },
   cineParana:{
-    pelea:'fight',discutir:'to argue',butacas:'cinema seats',golpes:'blows / hits',arrojar:'to throw / spray',
-    gas:'gas',pimienta:'pepper',enfrentamiento:'confrontation',función:'screening / showing',shopping:'shopping mall',
-    sala:'theater / auditorium',evacuar:'to evacuate',espectadores:'spectators / audience members',asistencia:'assistance',
-    médica:'medical',detenidas:'detained / arrested',discusión:'argument',ubicación:'location / seating place',
-    derivar:'to lead to / result in',escalar:'to escalate',agresiones:'aggressions / attacks',físicas:'physical',
-    incidente:'incident',alrededor:'around',intersección:'intersection',pelear:'to fight',aerosol:'spray can / aerosol',
-    sustancia:'substance',irritante:'irritant',dispersarse:'to disperse',ambiente:'environment / enclosed space',
-    afectar:'to affect',resto:'rest / remaining people',interrumpirse:'to be interrupted',abandonar:'to leave',
-    ingresar:'to enter',amigas:'female friends',ocupadas:'occupied',asignadas:'assigned',pedirles:'to ask them',
-    correrse:'to move aside',agredir:'to attack',tomar:'to grab / take',pelo:'hair',empleada:'female employee',
-    intervenir:'to intervene',tranquilizarse:'to calm down',separar:'to separate',participantes:'participants',
-    sacar:'to take out',rociar:'to spray'
+    violenta:'violent',pelea:'fight',cine:'cinema',Paraná:'Paraná',dos:'two',mujeres:'women',
+    discutieron:'argued',por:'by / over / for',las:'the',butacas:'cinema seats',hubo:'there were',
+    golpes:'blows / hits',arrojaron:'threw / sprayed',gas:'gas',pimienta:'pepper',
+
+    enfrentamiento:'confrontation',ocurrió:'happened',durante:'during',una:'a / one',
+    función:'screening / showing',en:'in / at',un:'a / one',shopping:'shopping mall',
+    de:'of / from',la:'the',capital:'capital city',entrerriana:'from Entre Ríos',
+    sala:'auditorium / theater',debió:'had to',ser:'to be',evacuada:'evacuated',
+    y:'and',varios:'several',espectadores:'spectators / audience members',
+    recibieron:'received',asistencia:'assistance',médica:'medical',fueron:'were',
+    detenidas:'detained / arrested',
+
+    discusión:'argument / discussion',Ríos:'Ríos',terminó:'ended',con:'with',
+    el:'the',uso:'use',episodio:'incident / episode',miércoles:'Wednesday',
+    noche:'night',película:'movie / film',terror:'horror',Mama:'Mama',
+    Siniestra:'Sinister',sobrenatural:'supernatural',estadounidense:'American',
+    dirigida:'directed',Rob:'Rob',Savage:'Savage',escrita:'written',Nathan:'Nathan',
+    Elston:'Elston',complejo:'complex',Las:'Las',Tipas:'Tipas',ubicado:'located',
+    Shopping:'Shopping',Paseo:'Paseo',del:'of the',ubicación:'location / seating place',
+    para:'for / in order to',ver:'to see',film:'film / movie',derivó:'led to / resulted in',
+    que:'that / which',escaló:'escalated',desde:'from',hasta:'until / up to',
+    agresiones:'attacks / aggression',físicas:'physical',
+
+    incidente:'incident',alrededor:'around / approximately',23:'23',4:'4',
+    situado:'located',intersección:'intersection',calles:'streets',Corrientes:'Corrientes',
+    San:'San',Lorenzo:'Lorenzo',cuando:'when',comenzaron:'started / began',
+    a:'to / at',pelear:'to fight',ellas:'them',utilizó:'used',aerosol:'spray can / aerosol',
+    contra:'against',otra:'other / another',
+
+    sustancia:'substance',irritante:'irritant',se:'itself / themselves',dispersó:'dispersed / spread',
+    ambiente:'environment / room',cerrado:'closed / enclosed',afectó:'affected',
+    al:'to the / at the',resto:'rest / remaining people',personas:'people',
+    no:'not / no',participaban:'were participating',conflicto:'conflict',
+    interrumpirse:'to be interrupted',los:'the',tuvieron:'had',abandonar:'to leave',
+
+    inició:'began / started',ingresó:'entered',sus:'their / her',amigas:'female friends',
+    encontró:'found',ocupadas:'occupied',tenían:'had',asignadas:'assigned',
+    pedirles:'to ask them',estaban:'were',allí:'there',corrieran:'moved aside',
+    comenzó:'began / started',
+
+    situación:'situation',volvió:'returned / again',mujer:'woman',agredió:'attacked',
+    su:'her / his / your',amiga:'female friend',tomó:'grabbed / took',pelo:'hair',
+    aunque:'although / even though',empleada:'female employee',intervino:'intervened',
+    tranquilizaran:'calmed down',continuó:'continued',
+
+    medio:'middle',intento:'attempt',separar:'to separate',participantes:'participants',
+    sacó:'took out',lo:'it / him',roció:'sprayed',lugar:'place'
   }
 };
 
@@ -3062,9 +3097,7 @@ function showStoryWordPop(el){
       '<button class="primary" onclick="addStoryWordFromPopup()">+ Add to this story test</button>';
   }else{
     pop.innerHTML='<b>'+esc(word)+'</b>'+
-      '<div class="muted small">English meaning is not in the dictionary yet.</div>'+
-      '<input id="storyWordEnglishInput" placeholder="Enter English meaning…">'+
-      '<button class="primary" onclick="addStoryWordFromPopup()">+ Add to this story test</button>';
+      '<div class="muted small">Translation is being completed for this story.</div>';
   }
 
   pop.dataset.word=word;
@@ -3080,13 +3113,8 @@ async function addStoryWordFromPopup(){
   const pop=$('storyWordPop');
   if(!pop) return;
   const word=pop.dataset.word;
-  const input=$('storyWordEnglishInput');
-  const en=(pop.dataset.en||input?.value||'').trim();
-  if(!word) return;
-  if(!en){
-    input?.focus();
-    return;
-  }
+  const en=(pop.dataset.en||'').trim();
+  if(!word||!en) return;
   await addStoryWord(word,en);
 }
 document.addEventListener('click',e=>{
@@ -3134,7 +3162,7 @@ async function addAllStoryWords(){
   });
 
   if(!toAdd.length){
-    alert('All words with known English meanings are already saved. Unknown words can still be added individually by entering their English meaning.');
+    alert('All words in this story are already saved.');
     return;
   }
 
@@ -3376,7 +3404,7 @@ function openStory(key){
         <span>Still active: <span class="count" id="storyActiveCount">0</span></span>
         <button class="primary" onclick="startStoryWordTest(false)">🧠 Test saved words</button>
         <button onclick="startStoryWordTest(true)">Test all</button>
-        <button class="story-addall" onclick="addAllStoryWords()">＋ Add all known words</button>
+        <button class="story-addall" onclick="addAllStoryWords()">＋ Add all words</button>
       </div>
       <div class="story-word-pop" id="storyWordPop"></div>
       <div class="story-testbox" id="storyTestBox"></div>
