@@ -770,6 +770,7 @@ JSON.parse(
 let items=[];
 let progress=[];
 let lessons=[];
+let lessonStates=[];
 
 let queue=[];
 let qi=0;
@@ -1581,6 +1582,24 @@ async function load(){
       +'&order=created_at.asc'
     );
 
+  lessonStates =
+    await api(
+      '/rest/v1/user_lesson_state?select=*'
+    );
+
+  const stateMap=new Map(lessonStates.map(x=>[x.lesson_id,x]));
+  lessons=lessons.map(x=>{
+    const s=stateMap.get(x.id);
+    return {
+      ...x,
+      archived:!!s?.archived,
+      archived_at:s?.archived_at||null,
+      last_score:s?.last_score??null,
+      last_total:s?.last_total??null,
+      last_tested_at:s?.last_tested_at||null
+    };
+  });
+
 }
 
 
@@ -1778,8 +1797,7 @@ function renderVocab(){
 
         norm(
           x.spanish+' '
-          +x.english+' '
-          +x.russian
+          +x.english
         ).includes(term)
       )
     );
@@ -1801,10 +1819,6 @@ function renderVocab(){
 
         <div>
           ${esc(x.english||'')}
-        </div>
-
-        <div class="muted small">
-          ${esc(x.russian||'')}
         </div>
 
       </div>
@@ -2426,7 +2440,7 @@ function buildLessonQuestions(lesson){
   pool.slice(0,4).forEach(it=>{
     qs.push({
       type:'input',
-      q:'Translate into Spanish: “'+(it.english||it.russian||'')+'”',
+      q:'Translate into Spanish: “'+(it.english||'')+'”',
       expected:it.spanish,
       explain:'Target expression: '+it.spanish
     });
@@ -2437,9 +2451,9 @@ function buildLessonQuestions(lesson){
 
     qs.push(makeChoiceQuestion(
       'What does “'+it.spanish+'” mean here?',
-      it.english||it.russian||'',
+      it.english||'',
       meanings,
-      'Meaning: '+(it.english||it.russian||'')
+      'Meaning: '+(it.english||'')
     ));
   });
 
@@ -2518,7 +2532,7 @@ function buildLessonQuestions(lesson){
     const it=pool[idx%pool.length];
     unique.push({
       type:'input',
-      q:'Use active recall. Write the Spanish expression for: “'+(it.english||it.russian||'')+'”',
+      q:'Use active recall. Write the Spanish expression for: “'+(it.english||'')+'”',
       expected:it.spanish,
       explain:'Answer: '+it.spanish
     });
@@ -2564,6 +2578,10 @@ function renderLessonQuestion(id){
   if(!st||!box) return;
   const q=st.questions[st.i];
   if(!q){
+    if(!st.savedResult){
+      st.savedResult=true;
+      saveLessonTestResult(id,st.score,st.questions.length);
+    }
     box.innerHTML=lessonResultHtml(id,st);
     return;
   }
@@ -2669,15 +2687,66 @@ function showLessonAnswer(id){
 
 async function setLessonArchived(id,archived){
   try{
-    await api('/rest/v1/lessons?id=eq.'+encodeURIComponent(id),{
-      method:'PATCH',
-      headers:{'Prefer':'return=minimal'},
-      body:JSON.stringify({archived,archived_at:archived?new Date().toISOString():null})
-    });
+    const existing=lessonStates.find(x=>x.lesson_id===id);
+    const payload={
+      user_id:session.user.id,
+      lesson_id:id,
+      archived,
+      archived_at:archived?new Date().toISOString():null,
+      updated_at:new Date().toISOString()
+    };
+
+    if(existing){
+      await api('/rest/v1/user_lesson_state?user_id=eq.'+encodeURIComponent(session.user.id)+'&lesson_id=eq.'+encodeURIComponent(id),{
+        method:'PATCH',
+        headers:{'Prefer':'return=minimal'},
+        body:JSON.stringify(payload)
+      });
+      Object.assign(existing,payload);
+    }else{
+      const rows=await api('/rest/v1/user_lesson_state',{
+        method:'POST',
+        headers:{'Prefer':'return=representation'},
+        body:JSON.stringify(payload)
+      });
+      if(rows?.[0]) lessonStates.push(rows[0]);
+    }
+
     const l=lessons.find(x=>x.id===id);
-    if(l){l.archived=archived;l.archived_at=archived?new Date().toISOString():null;}
+    if(l){l.archived=archived;l.archived_at=payload.archived_at;}
     renderLessons();
   }catch(e){alert(e.message);}
+}
+
+async function saveLessonTestResult(id,score,total){
+  try{
+    const existing=lessonStates.find(x=>x.lesson_id===id);
+    const payload={
+      user_id:session.user.id,
+      lesson_id:id,
+      last_score:score,
+      last_total:total,
+      last_tested_at:new Date().toISOString(),
+      updated_at:new Date().toISOString()
+    };
+    if(existing){
+      await api('/rest/v1/user_lesson_state?user_id=eq.'+encodeURIComponent(session.user.id)+'&lesson_id=eq.'+encodeURIComponent(id),{
+        method:'PATCH',
+        headers:{'Prefer':'return=minimal'},
+        body:JSON.stringify(payload)
+      });
+      Object.assign(existing,payload);
+    }else{
+      const rows=await api('/rest/v1/user_lesson_state',{
+        method:'POST',
+        headers:{'Prefer':'return=representation'},
+        body:JSON.stringify({...payload,archived:false})
+      });
+      if(rows?.[0]) lessonStates.push(rows[0]);
+    }
+    const l=lessons.find(x=>x.id===id);
+    if(l){l.last_score=score;l.last_total=total;l.last_tested_at=payload.last_tested_at;}
+  }catch(e){console.warn('Could not save lesson result',e);}
 }
 
 function renderLessons(){
@@ -2690,6 +2759,7 @@ function renderLessons(){
           <div>
             <h3>${i+1}. ${esc(x.title)}</h3>
             <p>${esc(x.summary||'')}</p>
+            ${x.last_total?'<div class="small muted">Your last score: '+x.last_score+' / '+x.last_total+'</div>':''}
           </div>
           ${x.archived?'<span class="badge">Archived</span>':''}
         </div>
@@ -2831,34 +2901,34 @@ function renderMistakes(){
 
 const STORY_WORDS={
   vuelo:{
-    vivir:'жить',Buenos:'Буэнос',Aires:'Айрес',tiempo:'время',soler:'обычно делать',volar:'летать',cada:'каждый',tanto:'столько / время от времени',
-    piloto:'пилот',profesional:'профессиональный',gustar:'нравиться',aviación:'авиация',siempre:'всегда',querer:'хотеть',aprender:'учить / узнавать',
-    nuevo:'новый',dudas:'сомнения',antes:'до / перед',vuelo:'полёт',revisar:'проверять',avión:'самолёт',veces:'разы',
-    sábado:'суббота',pasado:'прошлый',despertarse:'просыпаться',temprano:'рано',mientras:'пока',desayunar:'завтракать',celular:'телефон',
-    andar:'работать / идти',mal:'плохо',pronóstico:'прогноз',nubes:'облака',peligroso:'опасный',amigo:'друг',aeródromo:'аэродром',
-    ayudar:'помогать',equipo:'оборудование / команда',despegar:'взлетать',tranquilo:'спокойный',río:'река',enorme:'огромный',
-    arriba:'сверху',pensar:'думать',corto:'короткий',aburrido:'скучный',después:'после',motor:'двигатель',empezar:'начинать',
-    ruido:'шум',raro:'странный',principio:'начало',intentar:'пытаться',volverse:'становиться',loco:'сумасшедший',saber:'знать',
-    volver:'вернуться',temperatura:'температура',subir:'повышаться',rápido:'быстро',decisión:'решение',aterrizar:'приземляться',
-    pista:'полоса',acuatizar:'садиться на воду',buscar:'искать',lugar:'место',seguro:'безопасный',acordarse:'вспоминать',
-    agua:'вода',calma:'спокойная',quizás:'возможно',suerte:'удача',experiencia:'опыт',lograr:'добиться / суметь',
-    reunión:'встреча',contar:'рассказывать',historia:'история',milagro:'чудо',olvidar:'забывать',regla:'правило',momento:'момент',indicado:'подходящий'
+    vivir:'to live',Buenos:'Buenos',Aires:'Aires',tiempo:'time',soler:'to usually do',volar:'to fly',cada:'each',tanto:'so much / from time to time',
+    piloto:'pilot',profesional:'professional',gustar:'to like',aviación:'aviation',siempre:'always',querer:'to want',aprender:'to learn',
+    nuevo:'new',dudas:'doubts',antes:'before',vuelo:'flight',revisar:'to check',avión:'airplane',veces:'times',
+    sábado:'Saturday',pasado:'last / past',despertarse:'to wake up',temprano:'early',mientras:'while',desayunar:'to have breakfast',celular:'cell phone',
+    andar:'to work / go',mal:'badly',pronóstico:'forecast',nubes:'clouds',peligroso:'dangerous',amigo:'friend',aeródromo:'airfield',
+    ayudar:'to help',equipo:'equipment / team',despegar:'to take off',tranquilo:'calm',río:'river',enorme:'huge',
+    arriba:'above / upstairs',pensar:'to think',corto:'short',aburrido:'boring',después:'after / later',motor:'engine',empezar:'to start',
+    ruido:'noise',raro:'strange',principio:'beginning',intentar:'to try',volverse:'to become',loco:'crazy',saber:'to know',
+    volver:'to return',temperatura:'temperature',subir:'to rise',rápido:'quickly',decisión:'decision',aterrizar:'to land',
+    pista:'runway',acuatizar:'to land on water',buscar:'to look for',lugar:'place',seguro:'safe',acordarse:'to remember',
+    agua:'water',calma:'calm',quizás:'perhaps',suerte:'luck',experiencia:'experience',lograr:'to manage / achieve',
+    reunión:'meeting',contar:'to tell',historia:'story',milagro:'miracle',olvidar:'to forget',regla:'rule',momento:'moment',indicado:'right / appropriate'
   },
   ventana:{
-    afueras:'окраина',Bariloche:'Барилоче',vieja:'старая',cabaña:'хижина / домик',nadie:'никто',querer:'хотеть',alquilar:'снимать / сдавать',
-    vecinos:'соседи',noche:'ночь',viento:'ветер',golpear:'бить / стучать',golpeaba:'бил / стучал',ventanas:'окна',tormenta:'буря',
-    casas:'дома',abandonadas:'заброшенные',atraen:'привлекают / притягивают',historias:'истории',extrañas:'странные',creer:'верить',
-    llegar:'прибывать',fin:'конец',semana:'неделя',afuera:'снаружи',llover:'идти о дожде',cántaros:'как из ведра',puerta:'дверь',
-    salón:'гостиная',mesa:'стол',yacía:'лежал / находился',sobre:'конверт',amarillo:'жёлтый',adentro:'внутри',nota:'записка',
-    abrir:'открывать',sótano:'подвал',confiar:'доверять',confíes:'доверяй',medianoche:'полночь',reírse:'смеяться',escuchar:'слышать',
-    pasos:'шаги',planta:'этаж',baja:'нижняя',luz:'свет',apagarse:'гаснуть',apagó:'погас',golpe:'резко / внезапно',
-    oscuridad:'темнота',sombra:'тень',moverse:'двигаться',detrás:'позади',bajar:'спускаться',prisa:'спешка',espalda:'спина',
-    traba:'засов / щеколда',alguien:'кто-то',adentro:'изнутри',intruso:'незваный человек / нарушитель',esconderse:'прятаться',
-    sujeto:'человек / тип',pálido:'бледный',ropa:'одежда',antigua:'старая / старинная',señalar:'указывать',pared:'стена',
-    pequeña:'маленькая',negra:'чёрная',debajo:'под',cuaderno:'тетрадь',abierto:'открытый',página:'страница',
-    conjuro:'заклинание',preso:'заключённый',escapar:'сбежать',cárcel:'тюрьма',años:'годы',mostrar:'показывать',exterior:'наружная сторона',
-    vidrio:'стекло',propia:'собственная',cerrar:'закрывать',ojos:'глаза',correr:'бежать',escalera:'лестница',desaparecer:'исчезать',
-    quedar:'оставаться',vacía:'пустая',encenderse:'зажигаться / включаться',fantasmas:'призраки'
+    afueras:'outskirts',Bariloche:'Bariloche',vieja:'old',cabaña:'cabin',nadie:'nobody',querer:'to want',alquilar:'to rent',
+    vecinos:'neighbors',noche:'night',viento:'wind',golpear:'to hit / knock',golpeaba:'was hitting / knocking',ventanas:'windows',tormenta:'storm',
+    casas:'houses',abandonadas:'abandoned',atraen:'they attract',historias:'stories',extrañas:'strange',creer:'to believe',
+    llegar:'to arrive',fin:'end',semana:'week',afuera:'outside',llover:'to rain',cántaros:'heavily, as in rain',puerta:'door',
+    salón:'living room',mesa:'table',yacía:'was lying',sobre:'envelope',amarillo:'yellow',adentro:'inside',nota:'note',
+    abrir:'to open',sótano:'basement',confiar:'to trust',confíes:'you trust',medianoche:'midnight',reírse:'to laugh',escuchar:'to hear',
+    pasos:'footsteps',planta:'floor / level',baja:'lower',luz:'light',apagarse:'to go out / turn off',apagó:'went out',golpe:'suddenly / blow',
+    oscuridad:'darkness',sombra:'shadow',moverse:'to move',detrás:'behind',bajar:'to go down',prisa:'hurry',espalda:'back',
+    traba:'bolt / latch',alguien:'someone',intruso:'intruder',esconderse:'to hide',
+    sujeto:'man / individual',pálido:'pale',ropa:'clothes',antigua:'old / antique',señalar:'to point',pared:'wall',
+    pequeña:'small',negra:'black',debajo:'under / below',cuaderno:'notebook',abierto:'open',página:'page',
+    conjuro:'spell',preso:'prisoner',escapar:'to escape',cárcel:'prison',años:'years',mostrar:'to show',exterior:'outside / exterior',
+    vidrio:'glass',propia:'own',cerrar:'to close',ojos:'eyes',correr:'to run',escalera:'stairs',desaparecer:'to disappear',
+    quedar:'to remain',vacía:'empty',encenderse:'to turn on / light up',fantasmas:'ghosts'
   }
 };
 
@@ -2904,12 +2974,12 @@ function decorateStoryWords(){
 function showStoryWordPop(el){
   const pop=$('storyWordPop');
   if(!pop) return;
-  const word=el.dataset.word, ru=el.dataset.ru;
+  const word=el.dataset.word, en=el.dataset.ru;
   const saved=storySavedWords.find(x=>strip(x.spanish)===strip(word));
-  pop.innerHTML='<b>'+esc(word)+'</b><div style="margin:4px 0 10px">'+esc(ru)+'</div>'+
+  pop.innerHTML='<b>'+esc(word)+'</b><div style="margin:4px 0 10px">'+esc(en)+'</div>'+
     (saved
       ? '<div class="story-mastered">✓ In this story test · streak '+(saved.correct_streak||0)+'</div>'
-      : '<button class="primary" onclick="addStoryWord(\''+String(word).replace(/'/g,"\\'")+'\',\''+String(ru).replace(/'/g,"\\'")+'\')">+ Add to this story test</button>');
+      : '<button class="primary" onclick="addStoryWord(\''+String(word).replace(/'/g,"\\'")+'\',\''+String(en).replace(/'/g,"\\'")+'\')">+ Add to this story test</button>');
   const r=el.getBoundingClientRect();
   pop.style.left=Math.min(window.innerWidth-330,Math.max(8,r.left))+'px';
   pop.style.top=Math.min(window.innerHeight-150,r.bottom+8)+'px';
@@ -2927,12 +2997,12 @@ async function loadStoryWords(){
   decorateStoryWords();
 }
 
-async function addStoryWord(word,ru){
+async function addStoryWord(word,en){
   if(!session?.user?.id||!activeStoryKey) return;
   await api('/rest/v1/story_vocabulary',{
     method:'POST',
     headers:{'Prefer':'resolution=merge-duplicates,return=representation'},
-    body:JSON.stringify({user_id:session.user.id,story_key:activeStoryKey,spanish:word,russian:ru,active:true})
+    body:JSON.stringify({user_id:session.user.id,story_key:activeStoryKey,spanish:word,english:en,active:true})
   });
   $('storyWordPop')?.classList.remove('open');
   await loadStoryWords();
@@ -2985,7 +3055,7 @@ function renderStoryWordTest(){
   }
   const w=st.queue[st.i];
   box.innerHTML='<div class="small muted">Word '+(st.i+1)+' / '+st.queue.length+' · streak '+(w.correct_streak||0)+'</div>'+
-    '<div class="prompt" style="font-size:23px">'+esc(w.russian)+'</div>'+
+    '<div class="prompt" style="font-size:23px">'+esc(w.english)+'</div>'+
     '<input id="storyTestInput" placeholder="Type Spanish…" autocomplete="off" autocapitalize="none" spellcheck="false" onkeydown="if(event.key===\'Enter\')checkStoryWordTest()">'+
     '<div class="lesson-actions"><button class="primary" onclick="checkStoryWordTest()">Check</button><button onclick="revealStoryWordTest()">Show answer</button></div>'+
     '<div id="storyTestFeedback" class="lesson-test-result"></div>';
@@ -3046,10 +3116,10 @@ const STORIES={
       <p>Más tarde, en una pequeña <span class="story-vocab" title="meeting">reunión</span> con otros pilotos, <span class="story-tense t-indef">conté</span> la historia. Uno de ellos <span class="story-tense t-indef">dijo</span> que fue un <span class="story-vocab" title="miracle">milagro</span>. Yo no sé si fue un milagro, pero desde ese día <span class="story-tense t-present">reviso</span> todavía más cosas antes de despegar y <span class="story-tense t-present">no olvido</span> una regla sencilla: si algo <span class="story-vocab" title="is going wrong">anda mal</span>, no hay que esperar al <span class="story-vocab" title="the right moment">momento indicado</span>.</p>
     `,
     translation:`
-      <p>Я живу в Буэнос-Айресе уже некоторое время и время от времени летаю. Я не профессиональный пилот, но очень люблю авиацию и всегда хочу узнавать что-то новое. На всякий случай перед каждым полётом я дважды проверяю самолёт.</p>
-      <p>В прошлую субботу я проснулся очень рано. Пока я завтракал, телефон плохо работал, и я не мог нормально посмотреть прогноз. Были облака, но ничего не казалось опасным. Мой друг Мартин приехал на аэродром и помог мне с оборудованием.</p>
-      <p>Когда мы взлетели, всё было спокойно. Река сверху казалась огромной. Через двадцать минут двигатель начал издавать странный звук. Я старался не паниковать и в итоге решил садиться на воду. Нам удалось приводниться без проблем.</p>
-      <p>Позже я рассказал эту историю другим пилотам. Кто-то назвал это чудом. С тех пор я проверяю ещё больше вещей перед взлётом и помню простое правило: если что-то идёт не так, не надо ждать подходящего момента.</p>
+      <p>I have been living in Buenos Aires for some time and I fly from time to time. I am not a professional pilot, but I love aviation and always want to learn something new. Just in case, I check the airplane twice before every flight.</p>
+      <p>Last Saturday I woke up very early. While I was having breakfast, my phone was not working well and I could not check the forecast properly. There were some clouds, but nothing seemed dangerous. My friend Martín came to the airfield and helped me with the equipment.</p>
+      <p>When we took off, everything was calm. The river looked huge from above. Twenty minutes later the engine began making a strange noise. I tried not to panic and finally decided to land on the water. We managed to touch down safely.</p>
+      <p>Later I told the story to other pilots. One of them called it a miracle. Since then, I check even more things before takeoff and remember one simple rule: if something is going wrong, do not wait for the perfect moment.</p>
     `,
     questions:[
       '¿Por qué revisa el avión dos veces?',
@@ -3081,12 +3151,12 @@ const STORIES={
       <p>Hoy la cabaña <span class="story-tense t-present">sigue</span> vacía. Los vecinos <span class="story-tense t-present">dicen</span> que cada tanto una luz <span class="story-tense t-present">se enciende</span> en el sótano. Tomás nunca <span class="story-tense t-present">habla</span> de esa noche. Pero cuando alguien le pregunta si cree en fantasmas, ya no <span class="story-tense t-present">se ríe</span>.</p>
     `,
     translation:`
-      <p>На окраине Барилоче стояла старая хижина, которую никто не хотел снимать. Соседи говорили, что ночью ветер бьёт в окна даже без бури, а заброшенные дома притягивают странные истории. Томас в это не верил.</p>
-      <p>Однажды ночью он приехал туда на выходные. Дождь лил как из ведра, а ветер бил в дверь. На столе лежал жёлтый конверт. Внутри была записка: «Не открывай окно в подвале. Не доверяй никому, кто придёт после полуночи».</p>
-      <p>В полночь Томас услышал шаги. Свет внезапно погас. В темноте за дверью двигалась тень. Он спустился в подвал. Кто-то открыл засов изнутри, и Томас увидел бледного мужчину в старинной одежде.</p>
-      <p>Мужчина показал на маленькое чёрное окно. Под ним лежала открытая тетрадь с рассказом о заклинании и заключённом, который много лет назад сбежал из тюрьмы. Мужчина сказал: «Это окно показывает не то, что снаружи. Оно показывает то, что находится у тебя за спиной».</p>
-      <p>Томас посмотрел и увидел за собой ещё одну тень. Он убежал. Когда обернулся, мужчина, тетрадь и окно исчезли. Остался только жёлтый конверт с новой запиской: «Теперь ты знаешь, почему здесь никто не живёт».</p>
-      <p>Сегодня хижина всё ещё пустует. Соседи говорят, что время от времени в подвале загорается свет. Томас больше не смеётся, когда его спрашивают, верит ли он в призраков.</p>
+      <p>On the outskirts of Bariloche there was an old cabin that nobody wanted to rent. The neighbors said that at night the wind hit the windows even when there was no storm, and that abandoned houses attract strange stories. Tomás did not believe any of it.</p>
+      <p>One night he arrived at the cabin to spend the weekend. Outside, it was raining heavily and the wind was hitting the door. A yellow envelope was lying on the table. Inside was a note: “Do not open the basement window. Do not trust anyone who comes after midnight.”</p>
+      <p>At midnight Tomás heard footsteps. The light suddenly went out. In the darkness, a shadow was moving behind the door. He went down to the basement. Someone opened the latch from inside, and Tomás saw a very pale man wearing old-fashioned clothes.</p>
+      <p>The man pointed at a small black window. Under it lay an open notebook about a spell and a prisoner who had escaped from prison many years before. The man said: “This window does not show what is outside. It shows what is behind you.”</p>
+      <p>Tomás looked and saw another shadow behind him. He ran away. When he looked back, the man, the notebook and the window had disappeared. Only the yellow envelope remained, with a new note: “Now you know why nobody lives here.”</p>
+      <p>Today the cabin is still empty. The neighbors say that from time to time a light turns on in the basement. Tomás no longer laughs when someone asks whether he believes in ghosts.</p>
     `,
     questions:[
       '¿Por qué nadie quería alquilar la cabaña?',
@@ -3121,7 +3191,7 @@ function openStory(key){
       <div class="story-toolbar">
         <button onclick="toggleStoryClass('show-vocab',this)" class="active">Vocabulary</button>
         <button onclick="toggleStoryClass('show-tenses',this)">Tenses</button>
-        <button onclick="toggleStoryTranslation()">Show translation</button>
+        <button onclick="toggleStoryTranslation()">Show English</button>
       </div>
 
       <div class="story-vocabbar">
@@ -3146,7 +3216,7 @@ function openStory(key){
       </div>
 
       <div class="story-translation" id="storyTranslation">
-        <b>Russian translation</b>
+        <b>English translation</b>
         ${s.translation}
       </div>
 
@@ -3992,11 +4062,11 @@ function hint(){
     if(
       hintLevel===1
       &&
-      current.item?.russian
+      current.item?.english
     ){
 
       msg+=
-        ` · Russian: ${current.item.russian}`;
+        ` · English: ${current.item.english}`;
 
     }
 
