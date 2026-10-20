@@ -691,6 +691,17 @@ button.active{
           </div>
         </div>
       </div>
+
+      <div class="story-folder">
+        <h3>📰 Noticias y vida real</h3>
+        <div class="muted">Authentic news texts for reading, vocabulary and past-tense practice.</div>
+        <div class="story-cards">
+          <div class="story-card" onclick="openStory('cineParana')">
+            <div class="story-card-title">Violenta pelea en un cine de Paraná</div>
+            <div class="story-card-meta">Texto real · noticia · Indefinido · vocabulario cotidiano</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2929,6 +2940,20 @@ const STORY_WORDS={
     conjuro:'spell',preso:'prisoner',escapar:'to escape',cárcel:'prison',años:'years',mostrar:'to show',exterior:'outside / exterior',
     vidrio:'glass',propia:'own',cerrar:'to close',ojos:'eyes',correr:'to run',escalera:'stairs',desaparecer:'to disappear',
     quedar:'to remain',vacía:'empty',encenderse:'to turn on / light up',fantasmas:'ghosts'
+  },
+  cineParana:{
+    pelea:'fight',discutir:'to argue',butacas:'cinema seats',golpes:'blows / hits',arrojar:'to throw / spray',
+    gas:'gas',pimienta:'pepper',enfrentamiento:'confrontation',función:'screening / showing',shopping:'shopping mall',
+    sala:'theater / auditorium',evacuar:'to evacuate',espectadores:'spectators / audience members',asistencia:'assistance',
+    médica:'medical',detenidas:'detained / arrested',discusión:'argument',ubicación:'location / seating place',
+    derivar:'to lead to / result in',escalar:'to escalate',agresiones:'aggressions / attacks',físicas:'physical',
+    incidente:'incident',alrededor:'around',intersección:'intersection',pelear:'to fight',aerosol:'spray can / aerosol',
+    sustancia:'substance',irritante:'irritant',dispersarse:'to disperse',ambiente:'environment / enclosed space',
+    afectar:'to affect',resto:'rest / remaining people',interrumpirse:'to be interrupted',abandonar:'to leave',
+    ingresar:'to enter',amigas:'female friends',ocupadas:'occupied',asignadas:'assigned',pedirles:'to ask them',
+    correrse:'to move aside',agredir:'to attack',tomar:'to grab / take',pelo:'hair',empleada:'female employee',
+    intervenir:'to intervene',tranquilizarse:'to calm down',separar:'to separate',participantes:'participants',
+    sacar:'to take out',rociar:'to spray'
   }
 };
 
@@ -3166,7 +3191,45 @@ const STORIES={
       '¿Qué mostraba la ventana?',
       '¿Por qué Tomás cambió de opinión sobre los fantasmas?'
     ]
-  }
+  },
+
+  cineParana:{
+    title:'Violenta pelea en un cine de Paraná',
+    meta:'Noticia real · Paraná, Entre Ríos · Pretérito Indefinido · vocabulario de noticias',
+    text:`
+      <p><b>Violenta pelea en un cine de Paraná: dos mujeres discutieron por las butacas, hubo golpes y arrojaron gas pimienta</b></p>
+
+      <p>El <span class="story-vocab" title="confrontation">enfrentamiento</span> <span class="story-tense t-indef">ocurrió</span> durante una <span class="story-vocab" title="screening">función</span> en un shopping de la capital entrerriana. La <span class="story-vocab" title="auditorium">sala</span> <span class="story-tense t-indef">debió</span> ser <span class="story-vocab" title="evacuated">evacuada</span> y varios <span class="story-vocab" title="spectators">espectadores</span> <span class="story-tense t-indef">recibieron</span> asistencia médica. Dos mujeres, de 51 y 27 años, <span class="story-tense t-indef">fueron detenidas</span>.</p>
+
+      <p>Una <span class="story-vocab" title="argument">discusión</span> por las <span class="story-vocab" title="cinema seats">butacas</span> de un cine en Paraná, Entre Ríos, <span class="story-tense t-indef">terminó</span> en una violenta <span class="story-vocab" title="fight">pelea</span>, con <span class="story-vocab" title="blows">golpes</span> y el uso de gas pimienta.</p>
+
+      <p>El episodio <span class="story-tense t-indef">ocurrió</span> el miércoles por la noche, durante una función de la película de terror “Mama Siniestra”, película de terror sobrenatural estadounidense dirigida por Rob Savage y escrita por Nathan Elston, en el complejo Las Tipas, ubicado en el Shopping Paseo del Paraná. Una discusión por la <span class="story-vocab" title="location / seating place">ubicación</span> para ver el film <span class="story-tense t-indef">derivó</span> en un enfrentamiento, que <span class="story-tense t-indef">escaló</span> desde una discusión hasta las <span class="story-vocab" title="physical attacks">agresiones físicas</span>.</p>
+
+      <p>El <span class="story-vocab" title="incident">incidente</span> <span class="story-tense t-indef">ocurrió</span> alrededor de las 23, en la sala 4 del complejo, situado en la <span class="story-vocab" title="intersection">intersección</span> de las calles Corrientes y San Lorenzo, cuando dos mujeres <span class="story-tense t-indef">comenzaron</span> a <span class="story-vocab" title="to fight">pelear</span> y una de ellas <span class="story-tense t-indef">utilizó</span> un <span class="story-vocab" title="aerosol / spray can">aerosol</span> de gas pimienta contra la otra.</p>
+
+      <p>La <span class="story-vocab" title="irritant substance">sustancia irritante</span> <span class="story-tense t-indef">se dispersó</span> en el ambiente cerrado y <span class="story-tense t-indef">afectó</span> al resto de las personas que no participaban del conflicto. La función <span class="story-tense t-indef">debió</span> interrumpirse y los espectadores <span class="story-tense t-indef">tuvieron</span> que <span class="story-vocab" title="to leave">abandonar</span> la sala.</p>
+
+      <p>El conflicto <span class="story-tense t-indef">se inició</span> cuando una de las mujeres <span class="story-tense t-indef">ingresó</span> con sus amigas a la sala y <span class="story-tense t-indef">encontró</span> ocupadas las butacas que <span class="story-tense t-imperf">tenían</span> asignadas. Al <span class="story-vocab" title="to ask them">pedirles</span> a las personas que <span class="story-tense t-imperf">estaban</span> allí que <span class="story-vocab" title="to move aside">se corrieran</span>, <span class="story-tense t-indef">comenzó</span> una discusión.</p>
+
+      <p>La situación <span class="story-tense t-indef">volvió</span> a escalar cuando una mujer <span class="story-tense t-indef">agredió</span> a su amiga y la <span class="story-tense t-indef">tomó</span> del <span class="story-vocab" title="hair">pelo</span>. Aunque una <span class="story-vocab" title="female employee">empleada</span> del cine <span class="story-tense t-indef">intervino</span> para pedirles que se tranquilizaran, el enfrentamiento <span class="story-tense t-indef">continuó</span>.</p>
+
+      <p>En medio del intento por <span class="story-vocab" title="to separate">separar</span> a las participantes, una de ellas <span class="story-tense t-indef">sacó</span> un aerosol de gas pimienta y lo <span class="story-tense t-indef">roció</span> contra las personas que estaban en el lugar…</p>
+    `,
+    translation:`
+      <p><b>Violent fight in a cinema in Paraná:</b> two women argued over seats, there were blows, and pepper spray was used.</p>
+      <p>The confrontation happened during a screening in a shopping mall in Paraná. The auditorium had to be evacuated, several spectators received medical assistance, and two women aged 51 and 27 were detained.</p>
+      <p>The dispute began over assigned seats. It escalated from an argument to physical aggression. One woman used pepper spray; the irritant spread through the enclosed room and affected other people, so the screening had to be stopped and the audience had to leave.</p>
+      <p>The conflict began when one woman entered with her friends and found their assigned seats occupied. After asking the people to move, an argument began. A cinema employee tried to calm them down, but the confrontation continued.</p>
+    `,
+    questions:[
+      '¿Por qué empezó la discusión?',
+      '¿Dónde y aproximadamente a qué hora ocurrió el incidente?',
+      '¿Qué hizo una de las mujeres durante la pelea?',
+      '¿Por qué tuvieron que evacuar la sala?',
+      '¿Qué hizo la empleada del cine?',
+      '¿Qué pasó con las dos mujeres al final?'
+    ]
+
 };
 
 let activeStoryKey=null;
