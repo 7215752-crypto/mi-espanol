@@ -276,6 +276,9 @@ button.active{
 .story-word{border-bottom:1px dotted #9aa7b8;cursor:pointer;border-radius:4px}
 .story-word:hover{background:#fff4c7}
 .story-word.saved{background:#eaf7ef;border-bottom-color:#16835a}
+.story-word.unknown{border-bottom-style:dashed;border-bottom-color:#c6a15b}
+.story-word-pop input{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.story-addall{margin-left:auto}
 .story-word-pop{position:fixed;z-index:1200;min-width:220px;max-width:310px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 12px 35px rgba(0,0,0,.18);display:none}
 .story-word-pop.open{display:block}
 .story-word-pop b{font-size:17px}
@@ -2957,6 +2960,30 @@ const STORY_WORDS={
   }
 };
 
+const COMMON_STORY_WORDS={
+  el:'the',la:'the',los:'the',las:'the',un:'a / an',una:'a / an',unos:'some',unas:'some',
+  de:'of / from',del:'of the / from the',a:'to / at',al:'to the / at the',en:'in / on / at',con:'with',sin:'without',
+  por:'by / for / through',para:'for / in order to',sobre:'on / about / envelope',entre:'between / among',hacia:'toward',
+  desde:'from / since',hasta:'until / up to',detrás:'behind',debajo:'under / below',arriba:'above / upstairs',afuera:'outside',adentro:'inside',
+  y:'and',o:'or',pero:'but',porque:'because',que:'that / which',si:'if / yes',cuando:'when',mientras:'while',aunque:'although / even if',
+  como:'like / as / how',entonces:'then / so',después:'after / later',antes:'before',también:'also',todavía:'still / yet',
+  ya:'already / now',no:'no / not',sí:'yes',más:'more',muy:'very',bien:'well',mal:'badly',nunca:'never',siempre:'always',
+  algo:'something',nada:'nothing',nadie:'nobody',alguien:'someone',todo:'everything / all',todos:'all',otra:'another',otro:'another',
+  mismo:'same',misma:'same',cada:'each / every',ese:'that',esa:'that',esta:'this',este:'this',su:'his / her / your',sus:'his / her / your',
+  mi:'my',mis:'my',tu:'your',vos:'you',yo:'I',él:'he',ella:'she',ellos:'they',ellas:'they',nosotros:'we',
+  me:'me',te:'you',se:'himself / herself / themselves',le:'to him / her',les:'to them',lo:'it / him',la:'it / her',
+  es:'is',era:'was',eran:'were',fue:'was / went',fueron:'were / went',hay:'there is / there are',había:'there was / there were',
+  estaba:'was',estaban:'were',está:'is',están:'are',ser:'to be',estar:'to be',tener:'to have',tenía:'had',tenían:'had',
+  hacer:'to do / make',hizo:'did / made',ir:'to go',iba:'was going',iban:'were going',venir:'to come',vino:'came',
+  decir:'to say',dijo:'said',decían:'were saying / used to say',ver:'to see',vio:'saw',mirar:'to look',miró:'looked',
+  querer:'to want',quería:'wanted',podía:'could',poder:'to be able to',saber:'to know',sabía:'knew',creer:'to believe',
+  pensar:'to think',pensó:'thought',llegar:'to arrive',llegó:'arrived',volver:'to return',volvió:'returned',
+  abrir:'to open',abrió:'opened',cerrar:'to close',cerró:'closed',quedar:'to remain',quedaba:'remained',
+  pasar:'to happen / pass',pasó:'happened / passed',seguir:'to continue / follow',sigue:'continues',
+  ahora:'now',hoy:'today',ayer:'yesterday',noche:'night',día:'day',años:'years',hora:'hour',minutos:'minutes',
+  hombre:'man',mujer:'woman',personas:'people',persona:'person',lugar:'place',casa:'house',cosa:'thing',cosas:'things'
+};
+
 let storySavedWords=[];
 let storyTestState=null;
 
@@ -2966,51 +2993,102 @@ function normalizeStoryToken(w){
   return (w||'').replace(/^[¿¡"'“”‘’.,;:!?()]+|[¿¡"'“”‘’.,;:!?()]+$/g,'');
 }
 
+function storyTranslationForWord(clean){
+  const lex=storyLexicon(activeStoryKey);
+  const exact=Object.keys(lex).find(k=>strip(k)===strip(clean));
+  if(exact) return {word:exact,en:lex[exact],known:true};
+
+  const common=Object.keys(COMMON_STORY_WORDS).find(k=>strip(k)===strip(clean));
+  if(common) return {word:common,en:COMMON_STORY_WORDS[common],known:true};
+
+  const item=items.find(x=>strip(x.spanish)===strip(clean) && x.english);
+  if(item) return {word:item.spanish,en:item.english,known:true};
+
+  return {word:clean,en:'',known:false};
+}
+
 function decorateStoryWords(){
   const box=$('storyText');
   if(!box||!activeStoryKey) return;
-  const lex=storyLexicon(activeStoryKey);
   const walker=document.createTreeWalker(box,NodeFilter.SHOW_TEXT);
   const nodes=[];
   while(walker.nextNode()) nodes.push(walker.currentNode);
+
   nodes.forEach(node=>{
     if(node.parentElement?.closest('.story-word')) return;
     const parts=node.nodeValue.split(/(\s+)/);
     const frag=document.createDocumentFragment();
+
     parts.forEach(part=>{
       const clean=normalizeStoryToken(part);
-      const key=Object.keys(lex).find(k=>strip(k)===strip(clean));
-      if(key && clean){
+      const isSpanish=/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(clean);
+
+      if(clean && isSpanish){
+        const info=storyTranslationForWord(clean);
         const s=document.createElement('span');
-        s.className='story-word';
-        s.dataset.word=key;
-        s.dataset.ru=lex[key];
+        s.className='story-word'+(info.known?'':' unknown');
+        s.dataset.word=info.word;
+        s.dataset.en=info.en;
         s.textContent=part;
-        if(storySavedWords.some(x=>strip(x.spanish)===strip(key))) s.classList.add('saved');
+
+        if(storySavedWords.some(x=>strip(x.spanish)===strip(info.word))) s.classList.add('saved');
+
         s.addEventListener('mouseenter',e=>showStoryWordPop(e.currentTarget));
         s.addEventListener('click',e=>{e.stopPropagation();showStoryWordPop(e.currentTarget);});
         frag.appendChild(s);
-      }else frag.appendChild(document.createTextNode(part));
+      }else{
+        frag.appendChild(document.createTextNode(part));
+      }
     });
+
     node.parentNode.replaceChild(frag,node);
   });
 }
-
 function showStoryWordPop(el){
   const pop=$('storyWordPop');
   if(!pop) return;
-  const word=el.dataset.word, en=el.dataset.ru;
+
+  const word=el.dataset.word;
+  const en=el.dataset.en||'';
   const saved=storySavedWords.find(x=>strip(x.spanish)===strip(word));
-  pop.innerHTML='<b>'+esc(word)+'</b><div style="margin:4px 0 10px">'+esc(en)+'</div>'+
-    (saved
-      ? '<div class="story-mastered">✓ In this story test · streak '+(saved.correct_streak||0)+'</div>'
-      : '<button class="primary" onclick="addStoryWord(\''+String(word).replace(/'/g,"\\'")+'\',\''+String(en).replace(/'/g,"\\'")+'\')">+ Add to this story test</button>');
+
+  if(saved){
+    pop.innerHTML='<b>'+esc(word)+'</b>'+
+      '<div style="margin:4px 0 10px">'+esc(saved.english||en||'')+'</div>'+
+      '<div class="story-mastered">✓ In this story test · streak '+(saved.correct_streak||0)+'</div>';
+  }else if(en){
+    pop.innerHTML='<b>'+esc(word)+'</b>'+
+      '<div style="margin:4px 0 10px">'+esc(en)+'</div>'+
+      '<button class="primary" onclick="addStoryWordFromPopup()">+ Add to this story test</button>';
+  }else{
+    pop.innerHTML='<b>'+esc(word)+'</b>'+
+      '<div class="muted small">English meaning is not in the dictionary yet.</div>'+
+      '<input id="storyWordEnglishInput" placeholder="Enter English meaning…">'+
+      '<button class="primary" onclick="addStoryWordFromPopup()">+ Add to this story test</button>';
+  }
+
+  pop.dataset.word=word;
+  pop.dataset.en=en;
+
   const r=el.getBoundingClientRect();
   pop.style.left=Math.min(window.innerWidth-330,Math.max(8,r.left))+'px';
-  pop.style.top=Math.min(window.innerHeight-150,r.bottom+8)+'px';
+  pop.style.top=Math.min(window.innerHeight-190,r.bottom+8)+'px';
   pop.classList.add('open');
 }
 
+async function addStoryWordFromPopup(){
+  const pop=$('storyWordPop');
+  if(!pop) return;
+  const word=pop.dataset.word;
+  const input=$('storyWordEnglishInput');
+  const en=(pop.dataset.en||input?.value||'').trim();
+  if(!word) return;
+  if(!en){
+    input?.focus();
+    return;
+  }
+  await addStoryWord(word,en);
+}
 document.addEventListener('click',e=>{
   if(!e.target.closest('.story-word-pop')&&!e.target.closest('.story-word')) $('storyWordPop')?.classList.remove('open');
 });
@@ -3030,6 +3108,42 @@ async function addStoryWord(word,en){
     body:JSON.stringify({user_id:session.user.id,story_key:activeStoryKey,spanish:word,english:en,active:true})
   });
   $('storyWordPop')?.classList.remove('open');
+  await loadStoryWords();
+}
+
+async function addAllStoryWords(){
+  if(!activeStoryKey||!session?.user?.id) return;
+
+  const spans=[...document.querySelectorAll('#storyText .story-word')];
+  const existing=new Set(storySavedWords.map(x=>strip(x.spanish)));
+  const toAdd=[];
+
+  spans.forEach(s=>{
+    const word=s.dataset.word;
+    const en=s.dataset.en||'';
+    if(word && en && !existing.has(strip(word))){
+      existing.add(strip(word));
+      toAdd.push({
+        user_id:session.user.id,
+        story_key:activeStoryKey,
+        spanish:word,
+        english:en,
+        active:true
+      });
+    }
+  });
+
+  if(!toAdd.length){
+    alert('All words with known English meanings are already saved. Unknown words can still be added individually by entering their English meaning.');
+    return;
+  }
+
+  await api('/rest/v1/story_vocabulary',{
+    method:'POST',
+    headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},
+    body:JSON.stringify(toAdd)
+  });
+
   await loadStoryWords();
 }
 
@@ -3262,6 +3376,7 @@ function openStory(key){
         <span>Still active: <span class="count" id="storyActiveCount">0</span></span>
         <button class="primary" onclick="startStoryWordTest(false)">🧠 Test saved words</button>
         <button onclick="startStoryWordTest(true)">Test all</button>
+        <button class="story-addall" onclick="addAllStoryWords()">＋ Add all known words</button>
       </div>
       <div class="story-word-pop" id="storyWordPop"></div>
       <div class="story-testbox" id="storyTestBox"></div>
