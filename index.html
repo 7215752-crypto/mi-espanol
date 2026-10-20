@@ -273,6 +273,18 @@ button.active{
 .story-questions{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
 .story-questions ol{padding-left:22px}
 .story-questions li{margin:8px 0}
+.story-word{border-bottom:1px dotted #9aa7b8;cursor:pointer;border-radius:4px}
+.story-word:hover{background:#fff4c7}
+.story-word.saved{background:#eaf7ef;border-bottom-color:#16835a}
+.story-word-pop{position:fixed;z-index:1200;min-width:220px;max-width:310px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;box-shadow:0 12px 35px rgba(0,0,0,.18);display:none}
+.story-word-pop.open{display:block}
+.story-word-pop b{font-size:17px}
+.story-vocabbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0;padding:12px;background:#f7faff;border:1px solid #dbe7fb;border-radius:12px}
+.story-vocabbar .count{font-weight:800}
+.story-testbox{display:none;margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#fbfcff}
+.story-testbox.open{display:block}
+.story-testbox input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;margin:10px 0;font-size:18px}
+.story-mastered{font-size:12px;color:var(--green);font-weight:700}
 
 .actionbar{margin:12px 0}
 
@@ -2817,6 +2829,210 @@ function renderMistakes(){
    PRACTICE
    ========================================================= */
 
+const STORY_WORDS={
+  vuelo:{
+    vivir:'жить',Buenos:'Буэнос',Aires:'Айрес',tiempo:'время',soler:'обычно делать',volar:'летать',cada:'каждый',tanto:'столько / время от времени',
+    piloto:'пилот',profesional:'профессиональный',gustar:'нравиться',aviación:'авиация',siempre:'всегда',querer:'хотеть',aprender:'учить / узнавать',
+    nuevo:'новый',dudas:'сомнения',antes:'до / перед',vuelo:'полёт',revisar:'проверять',avión:'самолёт',veces:'разы',
+    sábado:'суббота',pasado:'прошлый',despertarse:'просыпаться',temprano:'рано',mientras:'пока',desayunar:'завтракать',celular:'телефон',
+    andar:'работать / идти',mal:'плохо',pronóstico:'прогноз',nubes:'облака',peligroso:'опасный',amigo:'друг',aeródromo:'аэродром',
+    ayudar:'помогать',equipo:'оборудование / команда',despegar:'взлетать',tranquilo:'спокойный',río:'река',enorme:'огромный',
+    arriba:'сверху',pensar:'думать',corto:'короткий',aburrido:'скучный',después:'после',motor:'двигатель',empezar:'начинать',
+    ruido:'шум',raro:'странный',principio:'начало',intentar:'пытаться',volverse:'становиться',loco:'сумасшедший',saber:'знать',
+    volver:'вернуться',temperatura:'температура',subir:'повышаться',rápido:'быстро',decisión:'решение',aterrizar:'приземляться',
+    pista:'полоса',acuatizar:'садиться на воду',buscar:'искать',lugar:'место',seguro:'безопасный',acordarse:'вспоминать',
+    agua:'вода',calma:'спокойная',quizás:'возможно',suerte:'удача',experiencia:'опыт',lograr:'добиться / суметь',
+    reunión:'встреча',contar:'рассказывать',historia:'история',milagro:'чудо',olvidar:'забывать',regla:'правило',momento:'момент',indicado:'подходящий'
+  },
+  ventana:{
+    afueras:'окраина',Bariloche:'Барилоче',vieja:'старая',cabaña:'хижина / домик',nadie:'никто',querer:'хотеть',alquilar:'снимать / сдавать',
+    vecinos:'соседи',noche:'ночь',viento:'ветер',golpear:'бить / стучать',golpeaba:'бил / стучал',ventanas:'окна',tormenta:'буря',
+    casas:'дома',abandonadas:'заброшенные',atraen:'привлекают / притягивают',historias:'истории',extrañas:'странные',creer:'верить',
+    llegar:'прибывать',fin:'конец',semana:'неделя',afuera:'снаружи',llover:'идти о дожде',cántaros:'как из ведра',puerta:'дверь',
+    salón:'гостиная',mesa:'стол',yacía:'лежал / находился',sobre:'конверт',amarillo:'жёлтый',adentro:'внутри',nota:'записка',
+    abrir:'открывать',sótano:'подвал',confiar:'доверять',confíes:'доверяй',medianoche:'полночь',reírse:'смеяться',escuchar:'слышать',
+    pasos:'шаги',planta:'этаж',baja:'нижняя',luz:'свет',apagarse:'гаснуть',apagó:'погас',golpe:'резко / внезапно',
+    oscuridad:'темнота',sombra:'тень',moverse:'двигаться',detrás:'позади',bajar:'спускаться',prisa:'спешка',espalda:'спина',
+    traba:'засов / щеколда',alguien:'кто-то',adentro:'изнутри',intruso:'незваный человек / нарушитель',esconderse:'прятаться',
+    sujeto:'человек / тип',pálido:'бледный',ropa:'одежда',antigua:'старая / старинная',señalar:'указывать',pared:'стена',
+    pequeña:'маленькая',negra:'чёрная',debajo:'под',cuaderno:'тетрадь',abierto:'открытый',página:'страница',
+    conjuro:'заклинание',preso:'заключённый',escapar:'сбежать',cárcel:'тюрьма',años:'годы',mostrar:'показывать',exterior:'наружная сторона',
+    vidrio:'стекло',propia:'собственная',cerrar:'закрывать',ojos:'глаза',correr:'бежать',escalera:'лестница',desaparecer:'исчезать',
+    quedar:'оставаться',vacía:'пустая',encenderse:'зажигаться / включаться',fantasmas:'призраки'
+  }
+};
+
+let storySavedWords=[];
+let storyTestState=null;
+
+function storyLexicon(key){ return STORY_WORDS[key]||{}; }
+
+function normalizeStoryToken(w){
+  return (w||'').replace(/^[¿¡"'“”‘’.,;:!?()]+|[¿¡"'“”‘’.,;:!?()]+$/g,'');
+}
+
+function decorateStoryWords(){
+  const box=$('storyText');
+  if(!box||!activeStoryKey) return;
+  const lex=storyLexicon(activeStoryKey);
+  const walker=document.createTreeWalker(box,NodeFilter.SHOW_TEXT);
+  const nodes=[];
+  while(walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node=>{
+    if(node.parentElement?.closest('.story-word')) return;
+    const parts=node.nodeValue.split(/(\s+)/);
+    const frag=document.createDocumentFragment();
+    parts.forEach(part=>{
+      const clean=normalizeStoryToken(part);
+      const key=Object.keys(lex).find(k=>strip(k)===strip(clean));
+      if(key && clean){
+        const s=document.createElement('span');
+        s.className='story-word';
+        s.dataset.word=key;
+        s.dataset.ru=lex[key];
+        s.textContent=part;
+        if(storySavedWords.some(x=>strip(x.spanish)===strip(key))) s.classList.add('saved');
+        s.addEventListener('mouseenter',e=>showStoryWordPop(e.currentTarget));
+        s.addEventListener('click',e=>{e.stopPropagation();showStoryWordPop(e.currentTarget);});
+        frag.appendChild(s);
+      }else frag.appendChild(document.createTextNode(part));
+    });
+    node.parentNode.replaceChild(frag,node);
+  });
+}
+
+function showStoryWordPop(el){
+  const pop=$('storyWordPop');
+  if(!pop) return;
+  const word=el.dataset.word, ru=el.dataset.ru;
+  const saved=storySavedWords.find(x=>strip(x.spanish)===strip(word));
+  pop.innerHTML='<b>'+esc(word)+'</b><div style="margin:4px 0 10px">'+esc(ru)+'</div>'+
+    (saved
+      ? '<div class="story-mastered">✓ In this story test · streak '+(saved.correct_streak||0)+'</div>'
+      : '<button class="primary" onclick="addStoryWord(\''+String(word).replace(/'/g,"\\'")+'\',\''+String(ru).replace(/'/g,"\\'")+'\')">+ Add to this story test</button>');
+  const r=el.getBoundingClientRect();
+  pop.style.left=Math.min(window.innerWidth-330,Math.max(8,r.left))+'px';
+  pop.style.top=Math.min(window.innerHeight-150,r.bottom+8)+'px';
+  pop.classList.add('open');
+}
+
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.story-word-pop')&&!e.target.closest('.story-word')) $('storyWordPop')?.classList.remove('open');
+});
+
+async function loadStoryWords(){
+  if(!activeStoryKey||!session?.user?.id) return;
+  storySavedWords=await api('/rest/v1/story_vocabulary?select=*&story_key=eq.'+encodeURIComponent(activeStoryKey)+'&active=eq.true&order=created_at.asc');
+  updateStoryVocabBar();
+  decorateStoryWords();
+}
+
+async function addStoryWord(word,ru){
+  if(!session?.user?.id||!activeStoryKey) return;
+  await api('/rest/v1/story_vocabulary',{
+    method:'POST',
+    headers:{'Prefer':'resolution=merge-duplicates,return=representation'},
+    body:JSON.stringify({user_id:session.user.id,story_key:activeStoryKey,spanish:word,russian:ru,active:true})
+  });
+  $('storyWordPop')?.classList.remove('open');
+  await loadStoryWords();
+}
+
+function updateStoryVocabBar(){
+  const n=storySavedWords.length;
+  const active=storySavedWords.filter(x=>(x.correct_streak||0)<5).length;
+  if($('storyWordCount')) $('storyWordCount').textContent=n;
+  if($('storyActiveCount')) $('storyActiveCount').textContent=active;
+}
+
+function buildStoryTestQueue(all=false){
+  let pool=storySavedWords.slice();
+  if(!all) pool=pool.filter(x=>(x.correct_streak||0)<5);
+  const weighted=[];
+  pool.forEach(x=>{
+    const streak=x.correct_streak||0;
+    const copies=streak<=0?4:streak===1?3:streak===2?2:1;
+    for(let i=0;i<copies;i++) weighted.push(x);
+  });
+  weighted.sort(()=>Math.random()-.5);
+  const seen=new Set(), out=[];
+  weighted.forEach(x=>{if(!seen.has(x.id)){seen.add(x.id);out.push(x);}});
+  return out;
+}
+
+function startStoryWordTest(all=false){
+  const box=$('storyTestBox');
+  if(!storySavedWords.length){
+    box.classList.add('open');
+    box.innerHTML='<b>No words yet.</b><p>Hover or tap words in the story and add the ones you want to learn.</p>';
+    return;
+  }
+  const q=buildStoryTestQueue(all);
+  storyTestState={queue:q,i:0,correct:0};
+  box.classList.add('open');
+  renderStoryWordTest();
+}
+
+function renderStoryWordTest(){
+  const st=storyTestState, box=$('storyTestBox');
+  if(!st||!box) return;
+  if(st.i>=st.queue.length){
+    box.innerHTML='<h3>Done</h3><p>Correct: <b>'+st.correct+' / '+st.queue.length+'</b></p>'+
+      '<p class="muted">Words you type correctly repeatedly appear less often. After 5 correct answers in a row they leave the normal test, but stay saved forever.</p>'+
+      '<button onclick="startStoryWordTest(false)">Test weak words again</button> <button onclick="startStoryWordTest(true)">Test all saved words</button>';
+    loadStoryWords();
+    return;
+  }
+  const w=st.queue[st.i];
+  box.innerHTML='<div class="small muted">Word '+(st.i+1)+' / '+st.queue.length+' · streak '+(w.correct_streak||0)+'</div>'+
+    '<div class="prompt" style="font-size:23px">'+esc(w.russian)+'</div>'+
+    '<input id="storyTestInput" placeholder="Type Spanish…" autocomplete="off" autocapitalize="none" spellcheck="false" onkeydown="if(event.key===\'Enter\')checkStoryWordTest()">'+
+    '<div class="lesson-actions"><button class="primary" onclick="checkStoryWordTest()">Check</button><button onclick="revealStoryWordTest()">Show answer</button></div>'+
+    '<div id="storyTestFeedback" class="lesson-test-result"></div>';
+  setTimeout(()=>$('storyTestInput')?.focus(),40);
+}
+
+async function saveStoryWordResult(w,ok,typed){
+  const nextStreak=ok?(w.correct_streak||0)+1:0;
+  const correct=(w.correct_count||0)+(ok?1:0);
+  const incorrect=(w.incorrect_count||0)+(ok?0:1);
+  const mastery=Math.min(100,Math.max(0,nextStreak*20-incorrect*3));
+  await api('/rest/v1/story_vocabulary?id=eq.'+w.id,{
+    method:'PATCH',
+    headers:{'Prefer':'return=minimal'},
+    body:JSON.stringify({correct_count:correct,incorrect_count:incorrect,correct_streak:nextStreak,mastery_score:mastery,last_reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()})
+  });
+  w.correct_count=correct; w.incorrect_count=incorrect; w.correct_streak=nextStreak; w.mastery_score=mastery;
+}
+
+async function checkStoryWordTest(){
+  const st=storyTestState,w=st.queue[st.i],inp=$('storyTestInput');
+  if(!w||!inp||inp.disabled) return;
+  const typed=inp.value.trim();
+  if(!typed) return;
+  inp.disabled=true;
+  const result=gradeAnswer(typed,w.spanish);
+  const ok=result==='correct';
+  await saveStoryWordResult(w,ok,typed);
+  if(ok) st.correct++;
+  const fb=$('storyTestFeedback');
+  fb.innerHTML=ok?'Correct ✅':'Incorrect. Answer: <b>'+esc(w.spanish)+'</b>';
+  fb.style.color=ok?'var(--green)':'var(--red)';
+  const b=document.createElement('button'); b.className='primary'; b.style.marginTop='10px'; b.textContent='Next';
+  b.onclick=()=>{st.i++;renderStoryWordTest();}; fb.appendChild(document.createElement('br')); fb.appendChild(b);
+}
+
+async function revealStoryWordTest(){
+  const st=storyTestState,w=st.queue[st.i],inp=$('storyTestInput');
+  if(!w||!inp||inp.disabled) return;
+  inp.disabled=true;
+  await saveStoryWordResult(w,false,'');
+  const fb=$('storyTestFeedback');
+  fb.innerHTML='Answer: <b>'+esc(w.spanish)+'</b>';
+  const b=document.createElement('button'); b.className='primary'; b.style.marginTop='10px'; b.textContent='Next';
+  b.onclick=()=>{st.i++;renderStoryWordTest();}; fb.appendChild(document.createElement('br')); fb.appendChild(b);
+}
+
 const STORIES={
   vuelo:{
     title:'El vuelo que no salió como esperaba',
@@ -2908,6 +3124,15 @@ function openStory(key){
         <button onclick="toggleStoryTranslation()">Show translation</button>
       </div>
 
+      <div class="story-vocabbar">
+        <span>Saved words: <span class="count" id="storyWordCount">0</span></span>
+        <span>Still active: <span class="count" id="storyActiveCount">0</span></span>
+        <button class="primary" onclick="startStoryWordTest(false)">🧠 Test saved words</button>
+        <button onclick="startStoryWordTest(true)">Test all</button>
+      </div>
+      <div class="story-word-pop" id="storyWordPop"></div>
+      <div class="story-testbox" id="storyTestBox"></div>
+
       <div class="story-legend">
         <span class="story-chip">🟩 Presente</span>
         <span class="story-chip">🟦 Indefinido</span>
@@ -2931,10 +3156,13 @@ function openStory(key){
       </div>
     </div>
   `;
+  loadStoryWords();
 }
 
 function closeStory(){
   activeStoryKey=null;
+  storySavedWords=[];
+  storyTestState=null;
   $('storyReader').classList.remove('open');
   $('storyMount').innerHTML='';
   $('storyLibrary').style.display='block';
