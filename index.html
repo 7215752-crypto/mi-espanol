@@ -244,6 +244,18 @@ button.active{
 .lesson-test-result{margin-top:10px;font-weight:700}
 .lesson-topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
 .story-page{max-width:900px;margin:0 auto}
+.story-library{max-width:1000px;margin:0 auto}
+.story-folders{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:16px 0}
+.story-folder{border:1px solid var(--line);border-radius:16px;padding:16px;background:#fff}
+.story-folder h3{margin:0 0 5px}
+.story-cards{display:grid;gap:10px;margin-top:12px}
+.story-card{border:1px solid var(--line);border-radius:12px;padding:13px;background:#fafbfe;cursor:pointer;transition:.15s}
+.story-card:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,0,0,.06)}
+.story-card-title{font-weight:800;font-size:17px}
+.story-card-meta{font-size:12px;color:var(--muted);margin-top:4px}
+.story-reader{display:none}
+.story-reader.open{display:block}
+.story-back{margin-bottom:12px}
 .story-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}
 .story-text{font-size:18px;line-height:1.75}
 .story-text p{margin:0 0 18px}
@@ -312,6 +324,7 @@ button.active{
 .cheat-box td{padding:4px 3px;border-bottom:1px solid #edf0f4}
 
 @media(max-width:850px){
+  .story-folders{grid-template-columns:1fr}
   .wrap{padding:12px}
 
   .grid{
@@ -636,132 +649,43 @@ button.active{
 
 
 <section id="story" class="panel">
-<div class="card story-page show-vocab" id="storyPage">
-  <div class="top">
-    <div>
-      <h2 style="margin-bottom:4px">El vuelo que no salió como esperaba</h2>
-      <div class="muted">Reading practice · Presente + Indefinido + Imperfecto</div>
+  <div class="story-library" id="storyLibrary">
+    <div class="top">
+      <div>
+        <h2 style="margin-bottom:4px">Historias</h2>
+        <div class="muted">Stories grouped by theme. Open one to read, listen and review vocabulary.</div>
+      </div>
     </div>
-    <button class="primary" onclick="speakSpanish(storyPlainText())">🔊 Hear story</button>
+
+    <div class="story-folders">
+      <div class="story-folder">
+        <h3>✈️ Aviación y aventura</h3>
+        <div class="muted">Flights, travel, decisions and unexpected situations.</div>
+        <div class="story-cards">
+          <div class="story-card" onclick="openStory('vuelo')">
+            <div class="story-card-title">El vuelo que no salió como esperaba</div>
+            <div class="story-card-meta">Presente · Indefinido · Imperfecto · aviation vocabulary</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="story-folder">
+        <h3>🌙 Misterio y suspenso</h3>
+        <div class="muted">Dark stories with today's vocabulary and narrative past tenses.</div>
+        <div class="story-cards">
+          <div class="story-card" onclick="openStory('ventana')">
+            <div class="story-card-title">La ventana que no debía abrirse</div>
+            <div class="story-card-meta">Today's words · misterio · Indefinido vs Imperfecto</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="story-toolbar">
-    <button onclick="toggleStoryClass('show-vocab',this)" class="active">Vocabulary</button>
-    <button onclick="toggleStoryClass('show-tenses',this)">Tenses</button>
-    <button onclick="toggleStoryTranslation()">Show translation</button>
+  <div class="story-reader" id="storyReader">
+    <button class="story-back" onclick="closeStory()">← Back to stories</button>
+    <div id="storyMount"></div>
   </div>
-
-  <div class="story-legend">
-    <span class="story-chip">🟩 Presente</span>
-    <span class="story-chip">🟦 Indefinido</span>
-    <span class="story-chip">🟨 Imperfecto</span>
-  </div>
-
-  <div class="story-text" id="storyText">
-    <p>
-      <span class="story-tense t-present">Vivo</span> en Buenos Aires desde hace un tiempo y
-      <span class="story-tense t-present">suelo</span> volar <span class="story-vocab" title="from time to time">cada tanto</span>.
-      No <span class="story-tense t-present">soy</span> piloto profesional, pero
-      <span class="story-tense t-present">me gusta</span> mucho la aviación y siempre
-      <span class="story-tense t-present">quiero</span> aprender algo nuevo.
-      <span class="story-vocab" title="just in case">Por las dudas</span>, antes de cada vuelo
-      <span class="story-tense t-present">reviso</span> el avión dos veces.
-    </p>
-
-    <p>
-      El sábado pasado <span class="story-tense t-indef">me desperté</span> muy temprano.
-      Mientras <span class="story-tense t-imperf">desayunaba</span>, el celular
-      <span class="story-vocab" title="was working badly">andaba mal</span> y no podía ver bien el pronóstico.
-      <span class="story-tense t-imperf">Había</span> algunas nubes, pero nada parecía peligroso.
-      Mi amigo Martín <span class="story-tense t-indef">vino</span> al aeródromo y
-      <span class="story-tense t-indef">me ayudó</span> con el <span class="story-vocab" title="equipment">equipo</span>.
-    </p>
-
-    <p>
-      Cuando <span class="story-tense t-indef">despegamos</span>, todo
-      <span class="story-tense t-imperf">estaba</span> tranquilo.
-      El río <span class="story-tense t-imperf">parecía</span> enorme desde arriba y yo
-      <span class="story-tense t-imperf">pensaba</span> que iba a ser un vuelo corto y aburrido.
-      Pero después de veinte minutos el motor
-      <span class="story-tense t-indef">empezó</span> a hacer un ruido raro.
-      Al principio <span class="story-tense t-indef">intenté</span> no
-      <span class="story-vocab" title="to go crazy">volverme loco</span>, porque
-      <span class="story-tense t-imperf">sabía</span> que todavía teníamos tiempo.
-    </p>
-
-    <p>
-      Martín <span class="story-tense t-indef">me dijo</span>:
-      “Tal vez sea mejor volver”.
-      Yo <span class="story-tense t-indef">quise</span> hacerlo, pero la temperatura del motor
-      <span class="story-tense t-indef">subió</span> muy rápido.
-      Entonces <span class="story-tense t-indef">tomé</span> una decisión:
-      no íbamos a <span class="story-vocab" title="to land">aterrizar</span> en una pista;
-      íbamos a <span class="story-vocab" title="to land on water">acuatizar</span>.
-    </p>
-
-    <p>
-      Mientras <span class="story-tense t-imperf">buscábamos</span> un lugar seguro,
-      yo <span class="story-tense t-imperf">trataba</span> de
-      <span class="story-vocab" title="to remember">acordarme de</span> todo lo que había aprendido.
-      El agua <span class="story-tense t-imperf">se veía</span> bastante calma.
-      <span class="story-vocab" title="perhaps">Quizás</span> fue suerte, quizás experiencia,
-      pero <span class="story-tense t-indef">logramos</span> tocar el agua sin problemas.
-      El avión <span class="story-tense t-indef">se detuvo</span> y durante unos segundos nadie
-      <span class="story-tense t-indef">dijo</span> nada.
-    </p>
-
-    <p>
-      Después <span class="story-tense t-indef">nos reímos</span>.
-      No porque la situación fuera divertida, sino porque
-      <span class="story-tense t-indef">habíamos sobrevivido</span> a un susto enorme.
-      Un pescador que <span class="story-tense t-imperf">estaba</span> cerca
-      <span class="story-tense t-indef">se acercó</span> y nos
-      <span class="story-tense t-indef">preguntó</span> si necesitábamos ayuda.
-      <span class="story-tense t-indef">Le contesté</span>:
-      “Sí. Y también necesito un café”.
-    </p>
-
-    <p>
-      Más tarde, en una pequeña <span class="story-vocab" title="meeting">reunión</span> con otros pilotos,
-      <span class="story-tense t-indef">conté</span> la historia.
-      Uno de ellos <span class="story-tense t-indef">dijo</span> que fue un
-      <span class="story-vocab" title="miracle">milagro</span>.
-      Yo no sé si fue un milagro, pero desde ese día
-      <span class="story-tense t-present">reviso</span> todavía más cosas antes de despegar y
-      <span class="story-tense t-present">no olvido</span> nunca una regla sencilla:
-      si algo <span class="story-vocab" title="is going wrong">anda mal</span>,
-      no hay que esperar al <span class="story-vocab" title="the right moment">momento indicado</span>.
-      El momento indicado puede ser ahora.
-    </p>
-  </div>
-
-  <div class="story-note">
-    <b>What to notice:</b> Presente describes your current life and conclusions;
-    Indefinido moves the story forward with completed events; Imperfecto gives background,
-    conditions and ongoing actions.
-  </div>
-
-  <div class="story-translation" id="storyTranslation">
-    <b>Russian translation</b>
-    <p>Я живу в Буэнос-Айресе уже некоторое время и время от времени летаю. Я не профессиональный пилот, но очень люблю авиацию и всегда хочу узнавать что-то новое. На всякий случай перед каждым полётом я дважды проверяю самолёт.</p>
-    <p>В прошлую субботу я проснулся очень рано. Пока я завтракал, телефон плохо работал, и я не мог нормально посмотреть прогноз. Были облака, но ничего не казалось опасным. Мой друг Мартин приехал на аэродром и помог мне с оборудованием.</p>
-    <p>Когда мы взлетели, всё было спокойно. Река сверху казалась огромной, и я думал, что это будет короткий и скучный полёт. Но через двадцать минут двигатель начал издавать странный звук. Сначала я старался не паниковать, потому что знал, что у нас ещё есть время.</p>
-    <p>Мартин сказал: «Наверное, лучше вернуться». Я хотел это сделать, но температура двигателя быстро выросла. Тогда я принял решение: мы не будем садиться на полосу — мы будем садиться на воду.</p>
-    <p>Пока мы искали безопасное место, я пытался вспомнить всё, чему научился. Вода выглядела довольно спокойной. Возможно, это была удача, возможно, опыт, но нам удалось коснуться воды без проблем.</p>
-    <p>Позже я рассказал эту историю другим пилотам. Кто-то сказал, что это было чудо. Не знаю, было ли это чудом, но с тех пор я проверяю ещё больше вещей перед взлётом и никогда не забываю простое правило: если что-то идёт не так, не нужно ждать подходящего момента. Подходящий момент может быть прямо сейчас.</p>
-  </div>
-
-  <div class="story-questions">
-    <h3>Check yourself</h3>
-    <ol>
-      <li>¿Por qué el protagonista revisa el avión dos veces?</li>
-      <li>¿Qué hacía cuando el celular andaba mal?</li>
-      <li>¿Qué pasó veinte minutos después del despegue?</li>
-      <li>¿Por qué decidieron acuatizar?</li>
-      <li>¿Qué aprendió el protagonista de esta experiencia?</li>
-    </ol>
-  </div>
-</div>
 </section>
 
 <section id="lessons" class="panel">
@@ -2893,14 +2817,138 @@ function renderMistakes(){
    PRACTICE
    ========================================================= */
 
+const STORIES={
+  vuelo:{
+    title:'El vuelo que no salió como esperaba',
+    meta:'Reading practice · Presente + Indefinido + Imperfecto',
+    text:`
+      <p><span class="story-tense t-present">Vivo</span> en Buenos Aires desde hace un tiempo y <span class="story-tense t-present">suelo</span> volar <span class="story-vocab" title="from time to time">cada tanto</span>. No <span class="story-tense t-present">soy</span> piloto profesional, pero <span class="story-tense t-present">me gusta</span> mucho la aviación y siempre <span class="story-tense t-present">quiero</span> aprender algo nuevo. <span class="story-vocab" title="just in case">Por las dudas</span>, antes de cada vuelo <span class="story-tense t-present">reviso</span> el avión dos veces.</p>
+      <p>El sábado pasado <span class="story-tense t-indef">me desperté</span> muy temprano. Mientras <span class="story-tense t-imperf">desayunaba</span>, el celular <span class="story-vocab" title="was working badly">andaba mal</span> y no podía ver bien el pronóstico. <span class="story-tense t-imperf">Había</span> algunas nubes, pero nada parecía peligroso. Mi amigo Martín <span class="story-tense t-indef">vino</span> al aeródromo y <span class="story-tense t-indef">me ayudó</span> con el <span class="story-vocab" title="equipment">equipo</span>.</p>
+      <p>Cuando <span class="story-tense t-indef">despegamos</span>, todo <span class="story-tense t-imperf">estaba</span> tranquilo. El río <span class="story-tense t-imperf">parecía</span> enorme desde arriba y yo <span class="story-tense t-imperf">pensaba</span> que el vuelo sería corto y aburrido. Pero después de veinte minutos el motor <span class="story-tense t-indef">empezó</span> a hacer un ruido raro. Al principio <span class="story-tense t-indef">intenté</span> no <span class="story-vocab" title="to go crazy">volverme loco</span>, porque <span class="story-tense t-imperf">sabía</span> que todavía teníamos tiempo.</p>
+      <p>Martín <span class="story-tense t-indef">me dijo</span>: “Creo que es mejor volver”. Yo <span class="story-tense t-indef">quise</span> hacerlo, pero la temperatura del motor <span class="story-tense t-indef">subió</span> muy rápido. Entonces <span class="story-tense t-indef">tomé</span> una decisión: no íbamos a <span class="story-vocab" title="to land">aterrizar</span> en una pista; íbamos a <span class="story-vocab" title="to land on water">acuatizar</span>.</p>
+      <p>Mientras <span class="story-tense t-imperf">buscábamos</span> un lugar seguro, yo <span class="story-tense t-imperf">trataba</span> de <span class="story-vocab" title="to remember">acordarme de</span> todo lo que aprendí. El agua <span class="story-tense t-imperf">se veía</span> bastante calma. <span class="story-vocab" title="perhaps">Quizás</span> fue suerte, quizás experiencia, pero <span class="story-tense t-indef">logramos</span> tocar el agua sin problemas.</p>
+      <p>Más tarde, en una pequeña <span class="story-vocab" title="meeting">reunión</span> con otros pilotos, <span class="story-tense t-indef">conté</span> la historia. Uno de ellos <span class="story-tense t-indef">dijo</span> que fue un <span class="story-vocab" title="miracle">milagro</span>. Yo no sé si fue un milagro, pero desde ese día <span class="story-tense t-present">reviso</span> todavía más cosas antes de despegar y <span class="story-tense t-present">no olvido</span> una regla sencilla: si algo <span class="story-vocab" title="is going wrong">anda mal</span>, no hay que esperar al <span class="story-vocab" title="the right moment">momento indicado</span>.</p>
+    `,
+    translation:`
+      <p>Я живу в Буэнос-Айресе уже некоторое время и время от времени летаю. Я не профессиональный пилот, но очень люблю авиацию и всегда хочу узнавать что-то новое. На всякий случай перед каждым полётом я дважды проверяю самолёт.</p>
+      <p>В прошлую субботу я проснулся очень рано. Пока я завтракал, телефон плохо работал, и я не мог нормально посмотреть прогноз. Были облака, но ничего не казалось опасным. Мой друг Мартин приехал на аэродром и помог мне с оборудованием.</p>
+      <p>Когда мы взлетели, всё было спокойно. Река сверху казалась огромной. Через двадцать минут двигатель начал издавать странный звук. Я старался не паниковать и в итоге решил садиться на воду. Нам удалось приводниться без проблем.</p>
+      <p>Позже я рассказал эту историю другим пилотам. Кто-то назвал это чудом. С тех пор я проверяю ещё больше вещей перед взлётом и помню простое правило: если что-то идёт не так, не надо ждать подходящего момента.</p>
+    `,
+    questions:[
+      '¿Por qué revisa el avión dos veces?',
+      '¿Qué hacía cuando el celular andaba mal?',
+      '¿Qué pasó veinte minutos después del despegue?',
+      '¿Por qué decidieron acuatizar?',
+      '¿Qué aprendió de la experiencia?'
+    ]
+  },
+
+  ventana:{
+    title:'La ventana que no debía abrirse',
+    meta:'Misterio · palabras de hoy · Presente + Indefinido + Imperfecto',
+    text:`
+      <p>En las afueras de Bariloche <span class="story-tense t-imperf">había</span> una vieja <span class="story-vocab" title="cabin">cabaña</span> que nadie quería alquilar. Los vecinos <span class="story-tense t-imperf">decían</span> que por la noche el viento <span class="story-vocab" title="was hitting">golpeaba</span> las ventanas aunque no hubiera tormenta. También <span class="story-tense t-imperf">decían</span> que las casas abandonadas <span class="story-vocab" title="attract">atraen</span> historias extrañas. Tomás no creía en esas cosas.</p>
+
+      <p>Una noche <span class="story-tense t-indef">llegó</span> a la cabaña para pasar el fin de semana. Afuera <span class="story-tense t-imperf">llovía</span> <span class="story-vocab" title="heavily">a cántaros</span> y el viento <span class="story-vocab" title="was hitting">golpeaba</span> la puerta. En el salón, sobre una mesa, <span class="story-vocab" title="lay">yacía</span> un sobre amarillo. Adentro <span class="story-tense t-imperf">había</span> una nota: “No abras la ventana del <span class="story-vocab" title="basement">sótano</span>. No <span class="story-vocab" title="trust">confíes</span> en nadie que venga después de medianoche”.</p>
+
+      <p>Tomás <span class="story-tense t-indef">se rió</span>, pero a las doce <span class="story-tense t-indef">escuchó</span> <span class="story-vocab" title="footsteps">pasos</span> en la planta baja. La luz <span class="story-tense t-indef story-vocab" title="went out">se apagó</span> de golpe. En la <span class="story-vocab" title="darkness">oscuridad</span>, una <span class="story-vocab" title="shadow">sombra</span> <span class="story-tense t-imperf">se movía</span> detrás de la puerta. Tomás <span class="story-tense t-indef">bajó</span> sin <span class="story-vocab" title="haste">prisa</span>, aunque sentía frío en la <span class="story-vocab" title="back">espalda</span>.</p>
+
+      <p>La puerta del sótano <span class="story-tense t-imperf">tenía</span> una vieja <span class="story-vocab" title="bolt/latch">traba</span>. Alguien la <span class="story-tense t-indef">abrió</span> desde adentro. Tomás <span class="story-tense t-indef">pensó</span> que era un <span class="story-vocab" title="intruder">intruso</span> que quería <span class="story-vocab" title="to hide">esconderse</span>, pero entonces <span class="story-tense t-indef">vio</span> a un <span class="story-vocab" title="man / individual">sujeto</span> muy pálido con ropa antigua.</p>
+
+      <p>El hombre <span class="story-tense t-indef">señaló</span> la pared. Allí <span class="story-tense t-imperf">había</span> otra ventana, pequeña y completamente negra. Debajo <span class="story-tense t-imperf">yacía</span> un cuaderno abierto. En la primera página alguien <span class="story-tense t-imperf">hablaba</span> de un <span class="story-vocab" title="spell">conjuro</span> y de un preso que <span class="story-tense t-indef">escapó</span> de la <span class="story-vocab" title="prison">cárcel</span> hacía muchos años.</p>
+
+      <p>“Esa ventana no muestra el exterior”, <span class="story-tense t-indef">dijo</span> el hombre. “Muestra lo que está detrás de vos”. Tomás no quería mirar, pero <span class="story-tense t-indef">miró</span>. En el vidrio <span class="story-tense t-indef">vio</span> su propia espalda… y detrás de él, otra sombra.</p>
+
+      <p>Tomás <span class="story-tense t-indef">cerró</span> los ojos y <span class="story-tense t-indef">corrió</span> hacia la escalera. Cuando <span class="story-tense t-indef">volvió</span> a mirar, el hombre, el cuaderno y la ventana <span class="story-tense t-imperf">ya no estaban</span>. Solo <span class="story-tense t-imperf">quedaba</span> el sobre amarillo. Esta vez la nota <span class="story-tense t-imperf">decía</span>: “Ahora ya sabés por qué nadie vive acá”.</p>
+
+      <p>Hoy la cabaña <span class="story-tense t-present">sigue</span> vacía. Los vecinos <span class="story-tense t-present">dicen</span> que cada tanto una luz <span class="story-tense t-present">se enciende</span> en el sótano. Tomás nunca <span class="story-tense t-present">habla</span> de esa noche. Pero cuando alguien le pregunta si cree en fantasmas, ya no <span class="story-tense t-present">se ríe</span>.</p>
+    `,
+    translation:`
+      <p>На окраине Барилоче стояла старая хижина, которую никто не хотел снимать. Соседи говорили, что ночью ветер бьёт в окна даже без бури, а заброшенные дома притягивают странные истории. Томас в это не верил.</p>
+      <p>Однажды ночью он приехал туда на выходные. Дождь лил как из ведра, а ветер бил в дверь. На столе лежал жёлтый конверт. Внутри была записка: «Не открывай окно в подвале. Не доверяй никому, кто придёт после полуночи».</p>
+      <p>В полночь Томас услышал шаги. Свет внезапно погас. В темноте за дверью двигалась тень. Он спустился в подвал. Кто-то открыл засов изнутри, и Томас увидел бледного мужчину в старинной одежде.</p>
+      <p>Мужчина показал на маленькое чёрное окно. Под ним лежала открытая тетрадь с рассказом о заклинании и заключённом, который много лет назад сбежал из тюрьмы. Мужчина сказал: «Это окно показывает не то, что снаружи. Оно показывает то, что находится у тебя за спиной».</p>
+      <p>Томас посмотрел и увидел за собой ещё одну тень. Он убежал. Когда обернулся, мужчина, тетрадь и окно исчезли. Остался только жёлтый конверт с новой запиской: «Теперь ты знаешь, почему здесь никто не живёт».</p>
+      <p>Сегодня хижина всё ещё пустует. Соседи говорят, что время от времени в подвале загорается свет. Томас больше не смеётся, когда его спрашивают, верит ли он в призраков.</p>
+    `,
+    questions:[
+      '¿Por qué nadie quería alquilar la cabaña?',
+      '¿Qué decía la primera nota?',
+      '¿Qué pasó cuando se apagó la luz?',
+      '¿Qué encontró Tomás en el sótano?',
+      '¿Qué mostraba la ventana?',
+      '¿Por qué Tomás cambió de opinión sobre los fantasmas?'
+    ]
+  }
+};
+
+let activeStoryKey=null;
+
+function openStory(key){
+  const s=STORIES[key];
+  if(!s) return;
+  activeStoryKey=key;
+  $('storyLibrary').style.display='none';
+  $('storyReader').classList.add('open');
+
+  $('storyMount').innerHTML=`
+    <div class="card story-page show-vocab" id="storyPage">
+      <div class="top">
+        <div>
+          <h2 style="margin-bottom:4px">${esc(s.title)}</h2>
+          <div class="muted">${esc(s.meta)}</div>
+        </div>
+        <button class="primary" onclick="speakSpanish(storyPlainText())">🔊 Hear story</button>
+      </div>
+
+      <div class="story-toolbar">
+        <button onclick="toggleStoryClass('show-vocab',this)" class="active">Vocabulary</button>
+        <button onclick="toggleStoryClass('show-tenses',this)">Tenses</button>
+        <button onclick="toggleStoryTranslation()">Show translation</button>
+      </div>
+
+      <div class="story-legend">
+        <span class="story-chip">🟩 Presente</span>
+        <span class="story-chip">🟦 Indefinido</span>
+        <span class="story-chip">🟨 Imperfecto</span>
+      </div>
+
+      <div class="story-text" id="storyText">${s.text}</div>
+
+      <div class="story-note">
+        <b>What to notice:</b> Indefinido moves the story forward; Imperfecto describes the background, atmosphere and ongoing actions.
+      </div>
+
+      <div class="story-translation" id="storyTranslation">
+        <b>Russian translation</b>
+        ${s.translation}
+      </div>
+
+      <div class="story-questions">
+        <h3>Check yourself</h3>
+        <ol>${s.questions.map(q=>'<li>'+esc(q)+'</li>').join('')}</ol>
+      </div>
+    </div>
+  `;
+}
+
+function closeStory(){
+  activeStoryKey=null;
+  $('storyReader').classList.remove('open');
+  $('storyMount').innerHTML='';
+  $('storyLibrary').style.display='block';
+}
+
 function toggleStoryClass(cls,btn){
   const p=$('storyPage');
+  if(!p) return;
   p.classList.toggle(cls);
   if(btn) btn.classList.toggle('active',p.classList.contains(cls));
 }
 
 function toggleStoryTranslation(){
-  $('storyTranslation').classList.toggle('open');
+  $('storyTranslation')?.classList.toggle('open');
 }
 
 function storyPlainText(){
