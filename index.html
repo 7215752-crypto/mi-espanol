@@ -74,6 +74,8 @@ button.active{
 }
 
 .nav{margin:18px 0}
+.language-picker{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.language-picker select{padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff}
 
 .panel{display:none}
 .panel.active{display:block}
@@ -424,7 +426,16 @@ button.active{
     <div class="muted">Vocabulary, grammar, verbs and practice — all in one place</div>
   </div>
 
-  <button id="signout">Sign out</button>
+  <div class="language-picker">
+    <span class="small muted">My language</span>
+    <select id="baseLanguage" onchange="changeBaseLanguage(this.value)">
+      <option value="en">English</option>
+      <option value="fr">Français</option>
+      <option value="it">Italiano</option>
+      <option value="de">Deutsch</option>
+    </select>
+    <button id="signout">Sign out</button>
+  </div>
 </div>
 
 
@@ -785,6 +796,51 @@ let items=[];
 let progress=[];
 let lessons=[];
 let lessonStates=[];
+let baseLanguage='en';
+const translationCache=new Map();
+
+const LANGUAGE_NAMES={en:'English',fr:'Français',it:'Italiano',de:'Deutsch'};
+
+async function translateSupport(text,target=baseLanguage){
+  text=String(text||'').trim();
+  if(!text||target==='en') return text;
+  const key=target+'|'+text;
+  if(translationCache.has(key)) return translationCache.get(key);
+  try{
+    const r=await fetch(SB+'/functions/v1/translate-helper',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':KEY},
+      body:JSON.stringify({text,target})
+    });
+    const d=await r.json();
+    const out=(d.translation||text).trim();
+    translationCache.set(key,out);
+    return out;
+  }catch{
+    return text;
+  }
+}
+
+async function translateSupportMany(texts,target=baseLanguage){
+  const arr=texts.map(x=>String(x||''));
+  if(target==='en') return arr;
+  return Promise.all(arr.map(x=>translateSupport(x,target)));
+}
+
+async function changeBaseLanguage(lang){
+  if(!['en','fr','it','de'].includes(lang)) lang='en';
+  baseLanguage=lang;
+  translationCache.clear();
+  if(session?.user?.id){
+    await api('/rest/v1/profiles?id=eq.'+encodeURIComponent(session.user.id),{
+      method:'PATCH',
+      headers:{'Prefer':'return=minimal'},
+      body:JSON.stringify({base_language:lang})
+    });
+  }
+  render();
+  if(activeStoryKey) openStory(activeStoryKey);
+}
 
 let queue=[];
 let qi=0;
@@ -1574,6 +1630,10 @@ function logout(){
 
 async function load(){
 
+  const prof=await api('/rest/v1/profiles?select=base_language&id=eq.'+encodeURIComponent(session.user.id));
+  baseLanguage=prof?.[0]?.base_language||'en';
+  if($('baseLanguage')) $('baseLanguage').value=baseLanguage;
+
   items =
     await api(
       '/rest/v1/study_items'
@@ -1831,7 +1891,7 @@ function renderVocab(){
           🔊
         </button>
 
-        <div>
+        <div class="localized-meaning" data-en="${esc(x.english||'')}">
           ${esc(x.english||'')}
         </div>
 
@@ -1839,13 +1899,21 @@ function renderVocab(){
 
     `).join('');
 
-
   bindSpeak();
+  localizeMeaningNodes();
 
 }
 
 
 
+
+async function localizeMeaningNodes(root=document){
+  const nodes=[...root.querySelectorAll('.localized-meaning[data-en]')];
+  await Promise.all(nodes.map(async n=>{
+    const en=n.dataset.en||'';
+    n.textContent=await translateSupport(en);
+  }));
+}
 
 const VERB_PERSONS=['yo','vos','él/ella/usted','nosotros','ellos/ustedes'];
 const VERB_TENSES=[
@@ -3095,21 +3163,23 @@ function decorateStoryWords(){
     node.parentNode.replaceChild(frag,node);
   });
 }
-function showStoryWordPop(el){
+async function showStoryWordPop(el){
   const pop=$('storyWordPop');
   if(!pop) return;
 
   const word=el.dataset.word;
   const en=el.dataset.en||'';
   const saved=storySavedWords.find(x=>strip(x.spanish)===strip(word));
+  const baseMeaning=saved?.english||en||'';
+  const localizedMeaning=baseMeaning ? await translateSupport(baseMeaning) : '';
 
   if(saved){
     pop.innerHTML='<b>'+esc(word)+'</b>'+
-      '<div style="margin:4px 0 10px">'+esc(saved.english||en||'')+'</div>'+
+      '<div style="margin:4px 0 10px">'+esc(localizedMeaning)+'</div>'+
       '<div class="story-mastered">✓ In this story test · streak '+(saved.correct_streak||0)+'</div>';
   }else if(en){
     pop.innerHTML='<b>'+esc(word)+'</b>'+
-      '<div style="margin:4px 0 10px">'+esc(en)+'</div>'+
+      '<div style="margin:4px 0 10px">'+esc(localizedMeaning)+'</div>'+
       '<button class="primary" onclick="addStoryWordFromPopup()">+ Add to this story test</button>';
   }else{
     pop.innerHTML='<b>'+esc(word)+'</b>'+
@@ -3226,7 +3296,7 @@ function startStoryWordTest(all=false){
   renderStoryWordTest();
 }
 
-function renderStoryWordTest(){
+async function renderStoryWordTest(){
   const st=storyTestState, box=$('storyTestBox');
   if(!st||!box) return;
   if(st.i>=st.queue.length){
@@ -3237,8 +3307,9 @@ function renderStoryWordTest(){
     return;
   }
   const w=st.queue[st.i];
+  const promptMeaning=await translateSupport(w.english||'');
   box.innerHTML='<div class="small muted">Word '+(st.i+1)+' / '+st.queue.length+' · streak '+(w.correct_streak||0)+'</div>'+
-    '<div class="prompt" style="font-size:23px">'+esc(w.english)+'</div>'+
+    '<div class="prompt" style="font-size:23px">'+esc(promptMeaning)+'</div>'+
     '<input id="storyTestInput" placeholder="Type Spanish…" autocomplete="off" autocapitalize="none" spellcheck="false" onkeydown="if(event.key===\'Enter\')checkStoryWordTest()">'+
     '<div class="lesson-actions"><button class="primary" onclick="checkStoryWordTest()">Check</button><button onclick="revealStoryWordTest()">Show answer</button></div>'+
     '<div id="storyTestFeedback" class="lesson-test-result"></div>';
@@ -3476,6 +3547,8 @@ function openStory(key){
       </div>
     </div>
   `;
+  const translationBtn=[...document.querySelectorAll('#storyPage .story-toolbar button')].find(b=>b.textContent.includes('Show English'));
+  if(translationBtn) translationBtn.textContent='Show '+LANGUAGE_NAMES[baseLanguage];
   loadStoryWords();
 }
 
@@ -3495,8 +3568,27 @@ function toggleStoryClass(cls,btn){
   if(btn) btn.classList.toggle('active',p.classList.contains(cls));
 }
 
-function toggleStoryTranslation(){
-  $('storyTranslation')?.classList.toggle('open');
+async function toggleStoryTranslation(){
+  const box=$('storyTranslation');
+  if(!box) return;
+  box.classList.toggle('open');
+  if(!box.classList.contains('open')) return;
+
+  const s=STORIES[activeStoryKey];
+  if(!s) return;
+
+  if(baseLanguage==='en'){
+    box.innerHTML='<b>English translation</b>'+s.translation;
+    return;
+  }
+
+  box.innerHTML='<b>'+esc(LANGUAGE_NAMES[baseLanguage])+' translation</b><p class="muted">Translating…</p>';
+  const tmp=document.createElement('div');
+  tmp.innerHTML=s.translation;
+  const paras=[...tmp.querySelectorAll('p')].map(p=>p.innerText);
+  const translated=await translateSupportMany(paras);
+  box.innerHTML='<b>'+esc(LANGUAGE_NAMES[baseLanguage])+' translation</b>'+
+    translated.map(t=>'<p>'+esc(t)+'</p>').join('');
 }
 
 function storyPlainText(){
@@ -3867,7 +3959,7 @@ function grammarQuestion(){
 
 
 
-function nextQuestion(){
+async function nextQuestion(){
 
   clearTimeout(autoTimer);
 
@@ -3983,8 +4075,11 @@ function nextQuestion(){
       `Conjugate “${v.spanish}” in Pretérito`;
 
 
-    $('subprompt').textContent=
-      `${person} — ${v.english||''}`;
+    $('subprompt').textContent=`${person} — ${v.english||''}`;
+    if(baseLanguage!=='en'){
+      const meaning=await translateSupport(v.english||'');
+      if(current?.item?.id===v.id) $('subprompt').textContent=`${person} — ${meaning}`;
+    }
 
   }
 
@@ -4055,8 +4150,11 @@ function nextQuestion(){
     };
 
 
-    $('prompt').textContent=
-      it.english;
+    $('prompt').textContent=it.english;
+    if(baseLanguage!=='en'){
+      const localized=await translateSupport(it.english||'');
+      if(current?.item?.id===it.id) $('prompt').textContent=localized;
+    }
 
 
     $('subprompt').textContent=
