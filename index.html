@@ -754,6 +754,24 @@ button.active{
 
 <h2>Grammar notes</h2>
 
+<div class="card" style="margin-bottom:16px" id="pronounLesson">
+<h2>Pronombres de objeto directo e indirecto</h2>
+<p class="muted">Прямое и косвенное дополнение · объяснения на русском · интерактивный тест</p>
+<p><b>Что?</b> → lo / la / los / las. <b>Кому?</b> → me / te / le / nos / os / les.</p>
+<p>Если рядом стоят <b>le или les + lo/la/los/las</b>, заменяем le/les на <b>se</b>. Порядок: сначала «кому», потом «что».</p>
+<div class="examples"><b>Примеры</b><p>Le doy el libro a Clara → <b>Se lo doy.</b></p><p>Voy a devolver el cuaderno a vos → <b>Voy a devolvértelo.</b></p><p>Compro flores para mi abuela → <b>Se las compro.</b></p></div>
+<h3>Тест: замени два дополнения</h3>
+<div id="pronounProgress" class="muted small"></div>
+<p id="pronounPrompt" style="font-size:19px;font-weight:650"></p>
+<p id="pronounTranslation" class="muted"></p>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<select id="pronounAnswer" aria-label="Выбери два местоимения" style="padding:11px;border:1px solid var(--line);border-radius:10px;min-width:180px"></select>
+<button type="button" id="pronounCheck" class="primary" onclick="checkPronoun()">Проверить</button>
+<button type="button" onclick="restartPronouns()">Начать заново</button>
+</div>
+<div id="pronounFeedback" aria-live="polite" style="margin-top:12px"></div>
+</div>
+
 <div id="grammarList" class="list"></div>
 
 </div>
@@ -4958,6 +4976,42 @@ $('search').oninput=
 
 if(session?.access_token)
   start();
+
+
+/* Object-pronoun tutorial: independent, saved locally on this browser. */
+const pronounQuestions=[
+{q:"Voy a comprar una bicicleta para mi hijo.",ru:"Я куплю велосипед сыну.",answer:"se la",why:"una bicicleta → la; para mi hijo → le; le + la → se la."},
+{q:"Ayer envié tres fotografías a mis padres.",ru:"Я отправил три фотографии родителям.",answer:"se las",why:"fotografías — женский род, множественное число → las; les + las → se las."},
+{q:"Voy a prestar mi coche a mis amigos.",ru:"Я одолжу машину друзьям.",answer:"se lo",why:"mi coche → lo; a mis amigos → les; les + lo → se lo."},
+{q:"María compró un regalo para su hermano.",ru:"Мария купила подарок брату.",answer:"se lo",why:"un regalo → lo; para su hermano → le; le + lo → se lo."},
+{q:"Quiero regalar los discos de vinilo a vos.",ru:"Я хочу подарить тебе виниловые пластинки.",answer:"te los",why:"a vos → te; los discos → los. Итого te los, не se los."},
+{q:"Llevo las revistas de música a Pedro.",ru:"Я несу Педро музыкальные журналы.",answer:"se las",why:"las revistas → las; a Pedro → le; le + las → se las."},
+{q:"Voy a devolver el cuaderno a vos.",ru:"Я верну тебе тетрадь.",answer:"te lo",why:"a vos → te; el cuaderno → lo. Можно сказать Voy a devolvértelo."},
+{q:"El profesor explica la regla a los alumnos.",ru:"Учитель объясняет правило ученикам.",answer:"se la",why:"la regla → la; a los alumnos → les; les + la → se la."},
+{q:"Mi hermana manda unas cartas a mí.",ru:"Сестра посылает мне письма.",answer:"me las",why:"a mí → me; unas cartas → las. Вместе me las."},
+{q:"Nosotros damos los boletos a Ana.",ru:"Мы даём билеты Ане.",answer:"se los",why:"los boletos → los; a Ana → le; le + los → se los."}
+];
+let pronounIndex=Math.max(0,Math.min(pronounQuestions.length,Number(localStorage.getItem('mi_pronouns_index')||0)));
+const pronounChoices=["se lo","se la","se los","se las","te lo","te la","te los","te las","me lo","me la","me los","me las","nos lo","nos la","nos los","nos las","le lo","le la","lo se","las se"];
+function renderPronoun(){
+ const p=document.getElementById('pronounPrompt'); if(!p)return;
+ const done=pronounIndex>=pronounQuestions.length;
+ document.getElementById('pronounProgress').textContent=done?'Урок завершён!':('Вопрос '+(pronounIndex+1)+' из '+pronounQuestions.length);
+ p.textContent=done?'¡Muy bien! Все упражнения пройдены.':pronounQuestions[pronounIndex].q;
+ document.getElementById('pronounTranslation').textContent=done?'Вернись к уроку позже для повторения.':pronounQuestions[pronounIndex].ru;
+ const s=document.getElementById('pronounAnswer');s.innerHTML='<option value="">Выбери ответ</option>'+pronounChoices.map(x=>'<option value="'+x+'">'+x+'</option>').join('');s.disabled=done;
+ document.getElementById('pronounCheck').disabled=done;
+ document.getElementById('pronounFeedback').textContent='';
+}
+function checkPronoun(){
+ const a=document.getElementById('pronounAnswer').value;
+ const q=pronounQuestions[pronounIndex];if(!q||!a)return;
+ const el=document.getElementById('pronounFeedback');
+ if(a===q.answer){el.textContent='✅ Верно! '+q.why+'  ';const b=document.createElement('button');b.textContent='Следующий вопрос →';b.onclick=()=>{pronounIndex++;localStorage.setItem('mi_pronouns_index',String(pronounIndex));renderPronoun()};el.appendChild(b)}
+ else el.textContent='Попробуй ещё раз. Подсказка: «кому» перед «что»; le/les меняются на se перед lo/la/los/las.';
+}
+function restartPronouns(){pronounIndex=0;localStorage.setItem('mi_pronouns_index','0');renderPronoun()}
+renderPronoun();
 
 </script>
 
